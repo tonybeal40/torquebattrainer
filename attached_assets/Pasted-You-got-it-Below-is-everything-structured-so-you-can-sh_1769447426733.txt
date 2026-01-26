@@ -1,0 +1,172 @@
+You got it. Below is everything, structured so you can ship without second-guessing.
+This is copy you can paste directly into App Store Connect and your app, plus a clear stop line so you don’t sabotage yourself by overbuilding.
+
+1️⃣ APP STORE SCREENSHOTS TEXT (HIGH-CONVERSION, APPLE-SAFE)
+
+Assume 5 screenshots. Apple reads these more than the description.
+
+Screenshot 1 – The Hook
+
+Headline:
+Why does my swing break down in games?
+
+Subtext:
+This app explains why, not just what it looks like.
+
+Screenshot 2 – What’s Different
+
+Headline:
+Most apps show mechanics. This shows decisions.
+
+Subtext:
+Analyze swing sequence and timing under game speed.
+
+Screenshot 3 – Game Context
+
+Headline:
+See why fastballs or breaking balls beat you.
+
+Subtext:
+Feedback explains pitch-specific vulnerabilities.
+
+Screenshot 4 – Clear Coaching
+
+Headline:
+One issue. One focus. One fix.
+
+Subtext:
+No overload. Just actionable coaching insight.
+
+Screenshot 5 – Trust & Safety
+
+Headline:
+Built for players, parents, and coaches.
+
+Subtext:
+Instructional feedback only. No medical claims.
+
+✅ These avoid:
+
+“AI-powered” hype
+
+Pro comparisons
+
+Performance guarantees
+
+Medical language
+
+Apple-safe. Conversion-strong.
+
+2️⃣ ONE-SCREEN ONBOARDING EXPLAINER (ADD THIS)
+
+This should appear once, right after app load, or as a modal.
+
+Copy (use exactly this)
+
+Title:
+What This App Does
+
+Body:
+This app analyzes swing decision timing, not just positions.
+
+It looks at when the body commits relative to the hands and explains how that timing affects performance against real pitches.
+
+You’ll receive:
+
+One clear diagnosis
+
+One correction focus
+
+One drill to work on
+
+This tool supports training and coaching. It does not replace in-person instruction.
+
+Button:
+Start Analysis
+
+Minimal HTML you can add (optional)
+<div class="card">
+  <h2>What This App Does</h2>
+  <p class="helper-text">
+    This app analyzes swing decision timing, not just positions.
+    It explains why a swing breaks down under game speed and what to fix first.
+  </p>
+  <p class="helper-text">
+    You’ll receive one clear diagnosis, one focus, and one drill.
+    This tool supports training and coaching.
+  </p>
+</div>
+
+
+No tutorial. No slides. One screen only.
+
+3️⃣ FIRST COACH OUTREACH SCRIPT (THIS MATTERS)
+
+This is not salesy. It’s peer-to-peer.
+
+DM / Email Script
+
+Hey Coach —
+I built a small swing analysis tool focused on decision timing, not mechanics.
+It explains why swings break down in games instead of just showing angles.
+I’m not trying to replace coaching — just pressure-test the feedback with real coaches.
+Would you be open to taking a look and telling me if the language makes sense?
+
+That’s it.
+No links unless they say yes.
+
+If they ask “What’s different?”
+
+Say this verbatim:
+
+Most tools show what a swing looks like.
+This explains when a hitter commits and what that costs them against real pitches.
+
+Stop talking after that.
+
+4️⃣ EXACTLY WHEN TO STOP TOUCHING THE APP (NON-NEGOTIABLE)
+
+You stop working on the app when all 5 are true:
+
+Upload works on iPhone
+
+Results load without delay
+
+Explanation reads clearly to a parent
+
+One coach says “yeah, that makes sense”
+
+One person pays (any amount)
+
+The moment those happen:
+
+❌ No UI tweaks
+
+❌ No feature adds
+
+❌ No re-writes
+
+❌ No “just one more improvement”
+
+You switch to:
+
+Talking to users
+
+Watching how they react
+
+Letting the product teach you
+
+THE TRUTH (IMPORTANT)
+
+You are not missing polish.
+You are at the dangerous stage where overthinking kills momentum.
+
+Right now, your advantage is:
+
+Clarity
+
+Constraint
+
+Game relevance
+
+Protect that.

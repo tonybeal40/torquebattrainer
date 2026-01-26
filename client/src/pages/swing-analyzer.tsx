@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,24 @@ interface PoseResponse {
 }
 
 export default function SwingAnalyzerPage() {
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [pitchType, setPitchType] = useState("unknown");
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<PoseResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem("swing_onboarding_seen");
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  function dismissOnboarding() {
+    localStorage.setItem("swing_onboarding_seen", "true");
+    setShowOnboarding(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +79,47 @@ export default function SwingAnalyzerPage() {
 
   function formatDiagnosis(diagnosis: string): string {
     return diagnosis.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  if (showOnboarding) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-6">
+        <Card className="border border-slate-800 bg-slate-950 p-6 max-w-md w-full space-y-5">
+          <h2 className="text-xl font-semibold text-sky-400" data-testid="text-onboarding-title">
+            What This App Does
+          </h2>
+          
+          <p className="text-sm text-slate-300 leading-relaxed">
+            This app analyzes swing decision timing, not just positions.
+          </p>
+          
+          <p className="text-sm text-slate-300 leading-relaxed">
+            It looks at when the body commits relative to the hands and explains how that timing affects performance against real pitches.
+          </p>
+          
+          <div className="text-sm text-slate-300 space-y-2">
+            <p>You'll receive:</p>
+            <ul className="list-disc list-inside space-y-1 text-slate-400">
+              <li>One clear diagnosis</li>
+              <li>One correction focus</li>
+              <li>One drill to work on</li>
+            </ul>
+          </div>
+          
+          <p className="text-xs text-slate-500">
+            This tool supports training and coaching. It does not replace in-person instruction.
+          </p>
+          
+          <Button
+            onClick={dismissOnboarding}
+            className="w-full rounded-lg bg-sky-400 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-300"
+            data-testid="button-start-analysis"
+          >
+            Start Analysis
+          </Button>
+        </Card>
+      </div>
+    );
   }
 
   if (result) {
