@@ -35,7 +35,9 @@ export async function registerRoutes(
       const sampleResponse = {
         frames_processed: 18,
         hip_start_frame: 25,
-        hand_start_frame: 40
+        hand_start_frame: 40,
+        timing_gap_frames: 15,
+        classification: "early_commit"
       };
 
       // Clean up uploaded file

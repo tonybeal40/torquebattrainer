@@ -11,6 +11,8 @@ interface PoseResponse {
   frames_processed: number;
   hip_start_frame: number | null;
   hand_start_frame: number | null;
+  timing_gap_frames: number | null;
+  classification: string;
 }
 
 export default function SwingAnalyzerPage() {
@@ -260,11 +262,28 @@ export default function SwingAnalyzerPage() {
                     </p>
                     
                     {result.hip_start_frame !== null && result.hand_start_frame !== null && (
-                      <div className="space-y-2 rounded-lg border border-emerald-400/30 bg-emerald-400/5 p-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
-                          Movement Sequence Detected
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="space-y-3 rounded-lg border border-emerald-400/30 bg-emerald-400/5 p-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                            Movement Sequence Detected
+                          </p>
+                          <span 
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                              result.classification === "connected_sequence" 
+                                ? "bg-emerald-400/20 text-emerald-300" 
+                                : result.classification === "early_commit"
+                                ? "bg-amber-400/20 text-amber-300"
+                                : result.classification === "arm_dominant_swing"
+                                ? "bg-rose-400/20 text-rose-300"
+                                : "bg-slate-400/20 text-slate-300"
+                            }`}
+                            data-testid="badge-classification"
+                          >
+                            {result.classification.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-3 text-xs">
                           <div data-testid="result-hip">
                             <span className="text-slate-400">Hip start:</span>
                             <span className="ml-2 font-semibold text-slate-50">Frame {result.hip_start_frame}</span>
@@ -273,11 +292,22 @@ export default function SwingAnalyzerPage() {
                             <span className="text-slate-400">Hand start:</span>
                             <span className="ml-2 font-semibold text-slate-50">Frame {result.hand_start_frame}</span>
                           </div>
+                          <div data-testid="result-gap">
+                            <span className="text-slate-400">Timing gap:</span>
+                            <span className="ml-2 font-semibold text-slate-50">{result.timing_gap_frames} frames</span>
+                          </div>
                         </div>
+                        
                         <p className="text-[10px] text-slate-400">
-                          {result.hip_start_frame < result.hand_start_frame 
-                            ? "✓ Proper sequence: Hips leading hands (good mechanics)" 
-                            : "⚠ Hands leading hips (early commit detected)"}
+                          {result.classification === "connected_sequence" 
+                            ? "✓ Excellent: Hips leading hands with tight connection (ideal mechanics)" 
+                            : result.classification === "early_commit"
+                            ? "⚠ Early commit: Hips fired too early, hands lagging behind"
+                            : result.classification === "arm_dominant_swing"
+                            ? "⚠ Arm swing: Hands leading hips (losing power from lower body)"
+                            : result.classification === "simultaneous_start"
+                            ? "→ Simultaneous start: Hips and hands moved together"
+                            : "→ Analysis could not determine clear sequence"}
                         </p>
                       </div>
                     )}
@@ -314,7 +344,9 @@ export default function SwingAnalyzerPage() {
                   : `{
   "frames_processed": 18,
   "hip_start_frame": 25,
-  "hand_start_frame": 40
+  "hand_start_frame": 40,
+  "timing_gap_frames": 15,
+  "classification": "early_commit"
 }`}
               </pre>
             </ScrollArea>
