@@ -1,0 +1,154 @@
+Good. Step 6 = clean UI that reads like a coach, not JSON.
+Below is copy-paste code to turn your output into a clean results page. No redesign rabbit hole.
+
+WHAT THIS DOES
+
+Keeps your backend logic exactly as is
+
+Replaces raw JSON with a results page
+
+Presents:
+
+Diagnosis
+
+Timing
+
+Coaching explanation
+
+Looks credible enough to show parents/coaches
+
+1️⃣ ADD A RESULTS TEMPLATE
+Create: templates/results.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Swing Analysis Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 30px;
+    }
+    .card {
+      max-width: 700px;
+      margin: auto;
+      background: #020617;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    h1 {
+      color: #38bdf8;
+    }
+    .label {
+      font-weight: bold;
+      color: #94a3b8;
+      margin-top: 15px;
+    }
+    .value {
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    pre {
+      background: #020617;
+      border-left: 4px solid #38bdf8;
+      padding: 15px;
+      white-space: pre-wrap;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+    .pill {
+      display: inline-block;
+      background: #1e293b;
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin: 4px 4px 0 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Swing Analysis</h1>
+
+    <div class="label">Sequence Classification</div>
+    <div class="value">{{ classification }}</div>
+
+    <div class="label">Timing Gap (frames)</div>
+    <div class="value">{{ timing_gap }}</div>
+
+    <div class="label">Diagnoses</div>
+    <div class="value">
+      {% for d in diagnoses %}
+        <span class="pill">{{ d }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="label">Coach Breakdown</div>
+    <pre>{{ ai_explanation }}</pre>
+  </div>
+</body>
+</html>
+
+2️⃣ MODIFY YOUR /upload ROUTE
+Replace the final return jsonify(...)
+
+with this render call:
+
+from flask import render_template
+
+return render_template(
+    "results.html",
+    classification=classification.replace("_", " ").title(),
+    timing_gap=timing_gap,
+    diagnoses=[d.replace("_", " ").title() for d in diagnoses],
+    ai_explanation=ai_explanation
+)
+
+
+That’s it.
+
+3️⃣ WHAT YOU SHOULD SEE NOW
+
+After upload:
+
+Clean page
+
+Clear diagnosis
+
+Human explanation
+
+Looks intentional, not hacked together
+
+This is now:
+
+Demo-able
+
+Share-able
+
+Parent-safe
+
+IMPORTANT REALITY CHECK
+
+Confirm:
+
+No JSON dumps visible
+
+Explanation reads cleanly
+
+Diagnoses are understandable
+
+You’d show this to a coach without apologizing
+
+If yes → you’re done with V1 UI.
+
+WHAT YOU HAVE BUILT (pause and register this)
+
+You now have:
+
+Video → pose → timing → diagnosis → explanation → UI
+
+That is a complete product loop.
+
+Everything from here forward is business decisions, not engineering.
