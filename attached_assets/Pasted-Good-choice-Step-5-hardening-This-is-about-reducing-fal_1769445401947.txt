@@ -1,0 +1,169 @@
+Good choice. Step 5 = hardening.
+This is about reducing false positives and making results stable, not adding features.
+
+Below is exactly what to change and why it works. Still copy-pasteable. Still controlled.
+
+WHAT “HARDENING” MEANS (very precise)
+
+Right now:
+
+One noisy frame can trigger movement
+
+Small jitters can look like motion
+
+Thresholds are arbitrary
+
+Hardening fixes that by:
+
+Smoothing motion
+
+Requiring consistency
+
+Normalizing for video speed
+
+Failing safely when data is weak
+
+No ML. No guesswork.
+
+1️⃣ SMOOTH MOVEMENT (reduce jitter)
+🔴 Add this helper function (anywhere above your route)
+def average_position(frames, key, window=3):
+    positions = []
+    for i in range(len(frames)):
+        if i < window:
+            continue
+        xs = [frames[j][key][0] for j in range(i-window, i)]
+        ys = [frames[j][key][1] for j in range(i-window, i)]
+        positions.append({
+            "frame": frames[i]["frame"],
+            "pos": (sum(xs)/len(xs), sum(ys)/len(ys))
+        })
+    return positions
+
+
+This smooths landmark movement across multiple frames instead of trusting one.
+
+2️⃣ REQUIRE SUSTAINED MOVEMENT (no single-frame triggers)
+🔴 Replace your movement_start function with this
+def movement_start(frames, key, threshold=0.01, sustain_frames=2):
+    smoothed = average_position(frames, key)
+    count = 0
+
+    for i in range(1, len(smoothed)):
+        x1, y1 = smoothed[i-1]["pos"]
+        x2, y2 = smoothed[i]["pos"]
+        dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        if dist > threshold:
+            count += 1
+            if count >= sustain_frames:
+                return smoothed[i]["frame"]
+        else:
+            count = 0
+
+    return None
+
+
+Why this matters:
+
+Noise moves once
+
+Real movement persists
+
+This change alone removes most false positives.
+
+3️⃣ NORMALIZE THRESHOLDS BY FRAME RATE
+
+Different phones → different FPS.
+
+🔴 Add this after video capture opens
+fps = cap.get(cv2.CAP_PROP_FPS)
+frame_scale = fps / 30 if fps else 1
+
+🔴 Then update thresholds dynamically
+hip_start = movement_start(
+    pose_data,
+    "left_hip",
+    threshold=0.01 * frame_scale
+)
+
+hand_start = movement_start(
+    pose_data,
+    "left_wrist",
+    threshold=0.01 * frame_scale
+)
+
+
+This prevents:
+
+Slow-mo videos from looking “late”
+
+Fast videos from triggering early
+
+4️⃣ HARDEN HEAD DRIFT (same logic)
+🔴 Replace head_drift_detected with this
+def head_drift_detected(frames, threshold=0.02):
+    if len(frames) < 6:
+        return False
+
+    nose_positions = average_position(frames, "nose", window=3)
+
+    start_x, start_y = nose_positions[0]["pos"]
+    end_x, end_y = nose_positions[-1]["pos"]
+
+    drift = np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2)
+    return drift > threshold
+
+
+Now head drift only triggers on real balance loss, not camera shake.
+
+5️⃣ FAIL SAFELY (this is critical)
+🔴 Add this before classification logic
+if hip_start is None or hand_start is None:
+    classification = "insufficient_motion_data"
+    diagnoses = ["video_quality_or_angle_issue"]
+
+
+This prevents:
+
+Bad lighting
+
+Side angles
+
+Partial body videos
+
+From producing garbage advice.
+
+This builds trust.
+
+WHAT YOU JUST ACHIEVED
+
+You now have:
+
+Smoothed motion detection
+
+Multi-frame confirmation
+
+Frame-rate normalization
+
+Safer failure modes
+
+This is the difference between:
+
+A demo
+
+And something coaches won’t laugh at
+
+You’re now operating at a serious V1 standard.
+
+FINAL REALITY CHECK (DO NOT SKIP)
+
+Test:
+
+Same swing twice → same diagnosis
+
+Different swing → different diagnosis
+
+Bad video → “insufficient data”
+
+If that’s true, you’re solid.

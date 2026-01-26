@@ -13,6 +13,8 @@ interface PoseResponse {
   hand_start_frame: number | null;
   timing_gap_frames: number | null;
   classification: string;
+  diagnoses: string[];
+  ai_explanation: string;
 }
 
 export default function SwingAnalyzerPage() {
@@ -312,6 +314,20 @@ export default function SwingAnalyzerPage() {
                       </div>
                     )}
 
+                    {result.ai_explanation && (
+                      <div className="space-y-2 rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                          AI Coach Feedback
+                        </p>
+                        <div 
+                          className="text-xs text-slate-200 leading-relaxed whitespace-pre-line"
+                          data-testid="text-ai-explanation"
+                        >
+                          {result.ai_explanation}
+                        </div>
+                      </div>
+                    )}
+
                     <p
                       className="text-[11px] text-slate-400"
                       data-testid="text-proof-explainer"
@@ -346,7 +362,9 @@ export default function SwingAnalyzerPage() {
   "hip_start_frame": 25,
   "hand_start_frame": 40,
   "timing_gap_frames": 15,
-  "classification": "early_commit"
+  "classification": "early_commit",
+  "diagnoses": ["early_commit_power_leak"],
+  "ai_explanation": "1. What is happening..."
 }`}
               </pre>
             </ScrollArea>
