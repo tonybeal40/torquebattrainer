@@ -1,0 +1,158 @@
+Perfect. Step 4 = AI explanation layer.
+This is where your system stops sounding like a debugger and starts sounding like a coach.
+
+I’ll give you exact, drop-in code. No theory. No fluff.
+
+WHAT STEP 4 DOES (very clear)
+
+You already have:
+
+classification
+
+diagnoses
+
+timing_gap_frames
+
+Step 4 will:
+
+Send those to an AI
+
+Get back human coaching language
+
+Return:
+
+What’s happening
+
+Why it shows up in games
+
+One fix
+
+One drill
+
+AI does not decide.
+AI only explains.
+
+WHAT YOU NEED (ONE THING)
+Add to requirements.txt
+openai
+
+SET YOUR OPENAI KEY (Replit Secrets)
+
+In Replit:
+
+Open Secrets
+
+Add:
+
+Key: OPENAI_API_KEY
+
+Value: your API key
+
+ADD THIS CODE TO app.py
+🔴 Add at the top
+import openai
+import os
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+🔴 Add this function below your rules
+def generate_ai_explanation(classification, diagnoses, timing_gap):
+    prompt = f"""
+You are a professional baseball hitting coach.
+
+Swing analysis data:
+- Classification: {classification}
+- Diagnoses: {diagnoses}
+- Timing gap (frames): {timing_gap}
+
+Explain this swing to a player in simple, clear language.
+
+Output exactly this format:
+1. What is happening
+2. Why this fails in games
+3. One correction focus
+4. One drill
+5. One simple cue
+
+Keep it short. No jargon. Coach tone.
+"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are an elite baseball hitting coach."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.4
+    )
+
+    return response.choices[0].message["content"]
+
+CALL IT IN YOUR ROUTE
+🔴 Add this after diagnoses are created
+    ai_explanation = generate_ai_explanation(
+        classification,
+        diagnoses,
+        timing_gap
+    )
+
+UPDATE RETURN JSON (FINAL FORM)
+    return jsonify({
+        "frames_processed": len(pose_data),
+        "hip_start_frame": hip_start,
+        "hand_start_frame": hand_start,
+        "timing_gap_frames": timing_gap,
+        "classification": classification,
+        "diagnoses": diagnoses,
+        "ai_explanation": ai_explanation
+    })
+
+WHAT YOU SHOULD SEE NOW (THIS IS THE MOMENT)
+
+Example response:
+
+{
+  "classification": "early_commit",
+  "diagnoses": ["early_commit_power_leak"],
+  "ai_explanation": "1. What is happening: Your hips are starting too early before your hands are ready.\n2. Why this fails in games: Early hip rotation locks you in and makes you vulnerable to off-speed pitches.\n3. One correction focus: Stay closed longer before turning.\n4. One drill: Bottom-hand delay drill.\n5. One simple cue: Be dangerous late."
+}
+
+
+That is no longer software output.
+That is coaching.
+
+STOP AND CONFIRM (DO NOT SKIP)
+
+Confirm all 5:
+
+No crashes
+
+You see AI text returned
+
+Language sounds like a coach
+
+Diagnoses match explanation
+
+Different swings → different explanations
+
+If yes → you’ve built the core product.
+
+REALITY CHECK (important)
+
+At this point you have:
+
+Video ingestion
+
+Pose extraction
+
+Sequence detection
+
+Diagnosis rules
+
+AI coaching output
+
+That is a complete V1.
+
+Everything else from here is refinement and polish.
+
+NEXT STEP OPTIONS (ONE NUMBER)
