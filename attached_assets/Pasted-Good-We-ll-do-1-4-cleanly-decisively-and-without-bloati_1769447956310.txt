@@ -1,0 +1,215 @@
+Good. We’ll do 1–4 cleanly, decisively, and without bloating your app.
+This is design + logic + copy + judgment, not feature creep.
+
+I’ll break this into four tight sections and then give you drop-in code where appropriate.
+
+1️⃣ GAME-READINESS INDEX — EXACT SCORING RULES
+
+This is not a vibe score. It’s a controlled judgment based on things you already compute.
+
+Scale
+
+0–100, where:
+
+0–30 = Not game-ready
+
+31–60 = Limited game readiness
+
+61–80 = Competitive readiness
+
+81–100 = Advanced game readiness
+
+No “elite.” No league names.
+
+Inputs you already have
+
+classification
+
+diagnoses
+
+timing_gap_frames
+
+pitch_type
+
+head drift (boolean)
+
+Scoring logic (deterministic, transparent)
+
+Start at 100, subtract penalties.
+
+Core penalties
+
+Early commit → −30
+
+Arm-dominant swing → −25
+
+Head drift / balance loss → −20
+
+Large timing gap (>10 frames) → −15
+
+Simultaneous start (no separation) → −10
+
+Pitch-context penalties
+
+Fastball vulnerability → −10
+
+Breaking-ball vulnerability → −10
+
+Floor + ceiling
+
+Minimum score: 0
+
+Maximum score: 100
+
+That’s it. Simple. Explainable. Defensible.
+
+Example
+
+Early commit + head drift + fastball vulnerability:
+
+100
+-30 early commit
+-20 head drift
+-10 fastball vulnerability
+= 40 → Limited game readiness
+
+
+That feels right to coaches.
+
+DROP-IN CODE (Python)
+
+Add this function:
+
+def calculate_game_readiness(classification, diagnoses, timing_gap, pitch_issues):
+    score = 100
+
+    if classification == "early_commit":
+        score -= 30
+    if classification == "arm_dominant_swing":
+        score -= 25
+
+    if "head_drift_balance_loss" in diagnoses:
+        score -= 20
+
+    if timing_gap and timing_gap > 10:
+        score -= 15
+
+    if classification == "simultaneous_start":
+        score -= 10
+
+    for issue in pitch_issues:
+        score -= 10
+
+    return max(0, min(100, score))
+
+2️⃣ UI COPY + TOOLTIP LANGUAGE (APPLE-SAFE)
+Label
+
+Game-Readiness Index
+
+Helper text (small, under label)
+
+Measures how well a swing pattern holds up under competitive pitch speed and sequencing.
+
+Tooltip / info text
+
+This score reflects decision timing, balance, and adjustability — not power or bat speed.
+
+No hype. No claims. No league references.
+
+Optional score band labels (safe)
+
+0–30: Needs game-speed adjustment
+
+31–60: Limited game readiness
+
+61–80: Competitive readiness
+
+81–100: Advanced readiness
+
+Avoid “elite,” “pro,” “college.”
+
+3️⃣ HOW TO INTRODUCE THIS WITHOUT OVERWHELMING USERS
+
+This is critical. You do not lead with the score.
+
+Order of presentation (lock this)
+
+Swing Sequence (text)
+
+Key Findings (diagnoses)
+
+Coach Breakdown (AI explanation)
+
+Game-Readiness Index (summary)
+
+Why?
+
+Users need context before judgment
+
+This prevents defensiveness
+
+Coaches trust it more
+
+UI placement (simple)
+
+Add this below the Coach Breakdown:
+
+<div class="section">
+  <div class="section-label">Game-Readiness Index</div>
+  <div class="section-value">{{ game_readiness }}/100</div>
+  <p class="helper-text">
+    Measures how this swing holds up under competitive pitch speed and sequencing.
+  </p>
+</div>
+
+
+No gauges. No colors. Just a number.
+
+Confidence comes from restraint.
+
+4️⃣ SHOULD YOU ADD THIS NOW? (HONEST ANSWER)
+
+Here’s the truth, no ego.
+
+You should add this now IF:
+
+You want a single differentiator
+
+You want something competitors don’t have
+
+You want parents to “get it” instantly
+
+You want coaches to respect the framing
+
+You should wait IF:
+
+Your current explanations confuse users
+
+You haven’t shown this to real people yet
+
+You feel tempted to polish visuals instead of testing
+
+My judgment for your app
+
+You’re ready if you treat this as:
+
+A summary, not a promise
+
+A conversation starter, not a verdict
+
+If you try to sell it as a magic number → don’t add it.
+
+FINAL POSITIONING WITH THIS INCLUDED
+
+You are now clearly different.
+
+Most apps say:
+
+“Here’s what your swing looks like.”
+
+Yours says:
+
+“Here’s whether this swing survives real game speed — and why.”
+
+That’s advanced-environment language without naming leagues.

@@ -49,6 +49,24 @@ Keep it short. No jargon. Coach tone.`;
   return response.choices[0]?.message?.content || "Unable to generate explanation.";
 }
 
+function calculateGameReadiness(
+  classification: string,
+  diagnoses: string[],
+  timing_gap: number | null
+): number {
+  let score = 100;
+
+  if (classification === "early_commit") score -= 30;
+  if (classification === "arm_dominant_swing") score -= 25;
+  if (classification === "simultaneous_start") score -= 10;
+
+  if (diagnoses.includes("head_drift_balance_loss")) score -= 20;
+
+  if (timing_gap !== null && timing_gap > 10) score -= 15;
+
+  return Math.max(0, Math.min(100, score));
+}
+
 function classifySwing(hip_start: number | null, hand_start: number | null): { 
   classification: string; 
   timing_gap: number | null;
@@ -116,6 +134,9 @@ export async function registerRoutes(
       // Classify the swing
       const { classification, timing_gap, diagnoses } = classifySwing(hip_start, hand_start);
 
+      // Calculate game readiness score
+      const game_readiness = calculateGameReadiness(classification, diagnoses, timing_gap);
+
       // Generate AI coaching explanation
       const ai_explanation = await generateAIExplanation(classification, diagnoses, timing_gap);
 
@@ -129,7 +150,8 @@ export async function registerRoutes(
         timing_gap_frames: timing_gap,
         classification,
         diagnoses,
-        ai_explanation
+        ai_explanation,
+        game_readiness
       });
       
     } catch (error) {

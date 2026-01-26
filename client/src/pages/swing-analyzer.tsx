@@ -19,6 +19,14 @@ interface PoseResponse {
   classification: string;
   diagnoses: string[];
   ai_explanation: string;
+  game_readiness: number;
+}
+
+function getReadinessLabel(score: number): string {
+  if (score <= 30) return "Needs game-speed adjustment";
+  if (score <= 60) return "Limited game readiness";
+  if (score <= 80) return "Competitive readiness";
+  return "Advanced readiness";
 }
 
 export default function SwingAnalyzerPage() {
@@ -171,6 +179,15 @@ export default function SwingAnalyzerPage() {
                 </pre>
               </div>
             )}
+
+            <div data-testid="section-game-readiness">
+              <p className="text-[13px] text-slate-400 mb-1">Game-Readiness Index</p>
+              <p className="text-xl font-semibold text-slate-100">{result.game_readiness}/100</p>
+              <p className="text-xs text-slate-400 mt-1">{getReadinessLabel(result.game_readiness)}</p>
+              <p className="text-xs text-slate-500 mt-2">
+                Measures how this swing holds up under competitive pitch speed and sequencing.
+              </p>
+            </div>
 
             <p className="text-xs text-slate-500 text-center pt-2">
               Powered by Late-Decision Swing Analysis™
