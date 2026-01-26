@@ -20,6 +20,7 @@ interface PoseResponse {
   diagnoses: string[];
   ai_explanation: string;
   game_readiness: number;
+  contact_speed_estimate: string;
 }
 
 function getReadinessLabel(score: number): string {
@@ -186,6 +187,14 @@ export default function SwingAnalyzerPage() {
               <p className="text-xs text-slate-400 mt-1">{getReadinessLabel(result.game_readiness)}</p>
               <p className="text-xs text-slate-500 mt-2">
                 Measures how this swing holds up under competitive pitch speed and sequencing.
+              </p>
+            </div>
+
+            <div data-testid="section-contact-speed">
+              <p className="text-[13px] text-slate-400 mb-1">Estimated Contact Speed</p>
+              <p className="text-base text-slate-100">{result.contact_speed_estimate}</p>
+              <p className="text-xs text-slate-500 mt-2">
+                Based on swing efficiency and contact stability — not measured velocity.
               </p>
             </div>
 

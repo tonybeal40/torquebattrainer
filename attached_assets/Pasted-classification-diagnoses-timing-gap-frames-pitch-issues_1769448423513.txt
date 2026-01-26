@@ -1,0 +1,170 @@
+classification
+
+diagnoses
+
+timing_gap_frames
+
+pitch_issues (array like ["fastball", "breaking"])
+
+We’ll add Contact Efficiency Score (CES) and map it to a range label only.
+
+A) Contact Efficiency Scoring Function (Python)
+def calculate_contact_efficiency(
+    game_readiness_score,
+    classification,
+    diagnoses,
+    timing_gap_frames,
+    pitch_issues
+):
+    # Internal only score (never shown directly)
+    ces = 100
+
+    # Core caps
+    if classification == "early_commit":
+        ces -= 30
+
+    if classification == "arm_dominant_swing":
+        ces -= 35
+
+    if "head_drift_balance_loss" in diagnoses:
+        ces -= 20
+
+    if timing_gap_frames and timing_gap_frames > 10:
+        ces -= 15
+
+    if classification == "simultaneous_start":
+        ces -= 10
+
+    # Pitch-context caps
+    for issue in pitch_issues:
+        if issue in ["fastball", "breaking"]:
+            ces -= 10
+
+    # Readiness coupling (hard caps)
+    if game_readiness_score < 40:
+        ces = min(ces, 50)
+    elif game_readiness_score < 60:
+        ces = min(ces, 70)
+
+    # Clamp
+    ces = max(0, min(100, ces))
+
+    return ces
+
+B) Map CES → User-Visible Range (Apple-Safe)
+def contact_efficiency_label(ces):
+    if ces <= 30:
+        return "Low"
+    elif ces <= 55:
+        return "Low–Moderate"
+    elif ces <= 75:
+        return "Moderate"
+    elif ces <= 90:
+        return "Moderate–High"
+    else:
+        return "High"
+
+C) Integrate Into Your Existing Analysis Pipeline
+
+Wherever you assemble your final response:
+
+ces = calculate_contact_efficiency(
+    game_readiness_score=game_readiness,
+    classification=classification,
+    diagnoses=diagnoses,
+    timing_gap_frames=timing_gap_frames,
+    pitch_issues=pitch_issues
+)
+
+contact_speed_estimate = contact_efficiency_label(ces)
+
+response = {
+    "game_readiness_index": game_readiness,
+    "contact_speed_estimate": contact_speed_estimate,
+    "contact_speed_explanation": (
+        "Estimated based on swing efficiency, sequencing, and contact stability. "
+        "This does not measure exit velocity."
+    ),
+    "coach_breakdown": ai_explanation
+}
+
+
+That’s it.
+No sensors. No fake precision. No legal risk.
+
+D) Frontend Display (HTML Example)
+<div class="section">
+  <div class="section-label">Estimated Contact Speed</div>
+  <div class="section-value">{{ contact_speed_estimate }}</div>
+  <p class="helper-text">
+    Based on swing efficiency and contact stability — not measured velocity.
+  </p>
+</div>
+
+
+Keep it below Game-Readiness Index.
+
+2️⃣ APP STORE SCREENSHOT COPY (CONTACT EFFICIENCY FEATURE)
+
+This is one screenshot only. Don’t overdo it.
+
+Screenshot Headline (Large)
+
+Why some swings don’t produce speed
+
+Subtext (Medium)
+
+Estimated Contact Speed explains whether energy is unlocked or capped at contact.
+
+Caption (Small, Apple-Safe)
+
+Based on swing efficiency and stability — not measured exit velocity.
+
+Alternate Version (A/B later)
+
+Estimated Contact Speed
+
+Shows how efficiently a swing transfers energy at contact under game conditions.
+
+Both versions:
+
+Avoid mph
+
+Avoid “exit velocity”
+
+Avoid pro comparisons
+
+Reinforce instructional framing
+
+HOW THIS MAKES YOU DIFFERENT (WITHOUT SAYING MLB)
+
+Other apps say:
+
+“Here’s your bat speed”
+
+“Here’s your exit velocity”
+
+You say:
+
+“Here’s why your speed is capped or unlocked.”
+
+That’s elite-environment thinking without naming leagues.
+
+FINAL OPERATOR GUIDANCE (IMPORTANT)
+Do NOT:
+
+Add mph numbers
+
+Add confidence percentages
+
+Compare to players
+
+Lead with this feature
+
+DO:
+
+Treat this as a consequence of readiness
+
+Explain it calmly
+
+Let coaches nod instead of argue

@@ -67,6 +67,40 @@ function calculateGameReadiness(
   return Math.max(0, Math.min(100, score));
 }
 
+function calculateContactEfficiency(
+  gameReadinessScore: number,
+  classification: string,
+  diagnoses: string[],
+  timing_gap: number | null,
+  pitchIssues: string[]
+): number {
+  let ces = 100;
+
+  if (classification === "early_commit") ces -= 30;
+  if (classification === "arm_dominant_swing") ces -= 35;
+  if (classification === "simultaneous_start") ces -= 10;
+
+  if (diagnoses.includes("head_drift_balance_loss")) ces -= 20;
+  if (timing_gap !== null && timing_gap > 10) ces -= 15;
+
+  for (const issue of pitchIssues) {
+    if (issue === "fastball" || issue === "breaking") ces -= 10;
+  }
+
+  if (gameReadinessScore < 40) ces = Math.min(ces, 50);
+  else if (gameReadinessScore < 60) ces = Math.min(ces, 70);
+
+  return Math.max(0, Math.min(100, ces));
+}
+
+function getContactEfficiencyLabel(ces: number): string {
+  if (ces <= 30) return "Low";
+  if (ces <= 55) return "Low–Moderate";
+  if (ces <= 75) return "Moderate";
+  if (ces <= 90) return "Moderate–High";
+  return "High";
+}
+
 function classifySwing(hip_start: number | null, hand_start: number | null): { 
   classification: string; 
   timing_gap: number | null;
@@ -137,6 +171,11 @@ export async function registerRoutes(
       // Calculate game readiness score
       const game_readiness = calculateGameReadiness(classification, diagnoses, timing_gap);
 
+      // Calculate contact efficiency
+      const pitchIssues: string[] = [];
+      const contact_efficiency = calculateContactEfficiency(game_readiness, classification, diagnoses, timing_gap, pitchIssues);
+      const contact_speed_estimate = getContactEfficiencyLabel(contact_efficiency);
+
       // Generate AI coaching explanation
       const ai_explanation = await generateAIExplanation(classification, diagnoses, timing_gap);
 
@@ -151,7 +190,8 @@ export async function registerRoutes(
         classification,
         diagnoses,
         ai_explanation,
-        game_readiness
+        game_readiness,
+        contact_speed_estimate
       });
       
     } catch (error) {
