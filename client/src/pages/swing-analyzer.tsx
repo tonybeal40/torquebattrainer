@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import swingHero from "../assets/images/baseball-swing-hero.png";
 
 interface PoseFrame {
   frame: number;
@@ -152,6 +153,15 @@ export default function SwingAnalyzerPage() {
               <span data-testid="text-benefit-3">Designed to embed directly into your public-facing website.</span>
             </li>
           </ul>
+
+          <div className="overflow-hidden rounded-2xl border border-emerald-400/30 bg-slate-900/80 shadow-[0_18px_60px_rgba(15,23,42,0.9)]">
+            <img
+              src={swingHero}
+              alt="Baseball hitter mid-swing in a batting cage"
+              className="h-44 w-full object-cover object-center sm:h-52"
+              data-testid="img-hero-swing"
+            />
+          </div>
 
           <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
             <span

@@ -1,0 +1,145 @@
+Perfect. We’re doing #1: hip vs hand movement detection.
+This is where the system starts thinking.
+
+Below is exact Replit-ready code that builds directly on what you already have.
+
+No AI. No timing math yet.
+Just detecting when hips move vs when hands move.
+
+WHAT THIS STEP DOES (very clear)
+
+From pose data, it will:
+
+Track hip position over frames
+
+Track hand (wrist) position over frames
+
+Detect the first frame where movement starts
+
+Output:
+
+hip_start_frame
+
+hand_start_frame
+
+That’s it.
+
+Once this works, timing is trivial.
+
+HOW THIS WORKS (one sentence)
+
+We measure distance change between frames and flag the first meaningful movement.
+
+UPDATE YOUR app.py
+🔴 Replace your /upload route with this version
+
+(Everything else stays the same)
+
+@app.route("/upload", methods=["POST"])
+def upload_video():
+    file = request.files["video"]
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    cap = cv2.VideoCapture(filepath)
+
+    frame_count = 0
+    pose_data = []
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_count += 1
+
+        # skip frames to reduce load
+        if frame_count % 5 != 0:
+            continue
+
+        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(image_rgb)
+
+        if results.pose_landmarks:
+            lm = results.pose_landmarks.landmark
+
+            pose_data.append({
+                "frame": frame_count,
+                "left_hip": (lm[mp_pose.PoseLandmark.LEFT_HIP].x,
+                             lm[mp_pose.PoseLandmark.LEFT_HIP].y),
+                "right_hip": (lm[mp_pose.PoseLandmark.RIGHT_HIP].x,
+                              lm[mp_pose.PoseLandmark.RIGHT_HIP].y),
+                "left_wrist": (lm[mp_pose.PoseLandmark.LEFT_WRIST].x,
+                               lm[mp_pose.PoseLandmark.LEFT_WRIST].y),
+                "right_wrist": (lm[mp_pose.PoseLandmark.RIGHT_WRIST].x,
+                                lm[mp_pose.PoseLandmark.RIGHT_WRIST].y)
+            })
+
+    cap.release()
+
+    # ---- MOVEMENT DETECTION ----
+
+    def movement_start(frames, key, threshold=0.01):
+        for i in range(1, len(frames)):
+            x1, y1 = frames[i-1][key]
+            x2, y2 = frames[i][key]
+            dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+            if dist > threshold:
+                return frames[i]["frame"]
+        return None
+
+    hip_start = movement_start(pose_data, "left_hip")
+    hand_start = movement_start(pose_data, "left_wrist")
+
+    return jsonify({
+        "frames_processed": len(pose_data),
+        "hip_start_frame": hip_start,
+        "hand_start_frame": hand_start
+    })
+
+WHAT YOU SHOULD SEE (THIS IS IMPORTANT)
+
+After uploading a video, you should get JSON like:
+
+{
+  "frames_processed": 18,
+  "hip_start_frame": 25,
+  "hand_start_frame": 40
+}
+
+
+That means:
+
+Hips started first ✔
+
+Hands started later ✔
+
+Your system is now detecting sequence
+
+This is real swing intelligence.
+
+DO NOT MOVE ON UNTIL THIS IS TRUE
+
+Confirm all 3:
+
+Upload works
+
+You get hip_start_frame and hand_start_frame
+
+No crashes
+
+If one fails, stop and fix it.
+
+WHY THIS MATTERS (quick reality check)
+
+This single capability unlocks:
+
+Early vs late commit
+
+Sequence classification
+
+Adjustability logic
+
+Game-relevant analysis
+
+MLB-level analysis starts here, not with fancy charts.
