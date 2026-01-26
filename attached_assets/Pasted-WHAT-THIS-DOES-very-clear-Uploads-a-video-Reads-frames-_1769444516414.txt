@@ -1,0 +1,147 @@
+WHAT THIS DOES (very clear)
+
+Uploads a video
+
+Reads frames with OpenCV
+
+Runs MediaPipe Pose on frames
+
+Extracts body landmarks
+
+Returns pose data (proof it works)
+
+This is the hard gate. Once this runs, you’re officially building.
+
+REPLIT SETUP (DO THIS FIRST)
+Create a Python (Flask) Replit
+requirements.txt
+flask
+opencv-python
+mediapipe
+numpy
+
+
+Replit will auto-install these.
+
+FILE 1: app.py
+
+This is the entire backend
+
+from flask import Flask, request, jsonify, render_template
+import cv2
+import mediapipe as mp
+import os
+import numpy as np
+
+app = Flask(__name__)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+mp_pose = mp.solutions.pose
+pose = mp_pose.Pose(static_image_mode=False)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/upload", methods=["POST"])
+def upload_video():
+    file = request.files["video"]
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    cap = cv2.VideoCapture(filepath)
+
+    frame_count = 0
+    pose_frames = []
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_count += 1
+
+        # Skip frames to reduce load (every 5th frame)
+        if frame_count % 5 != 0:
+            continue
+
+        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(image_rgb)
+
+        if results.pose_landmarks:
+            landmarks = []
+            for lm in results.pose_landmarks.landmark:
+                landmarks.append({
+                    "x": lm.x,
+                    "y": lm.y,
+                    "z": lm.z,
+                    "visibility": lm.visibility
+                })
+
+            pose_frames.append({
+                "frame": frame_count,
+                "landmarks": landmarks
+            })
+
+    cap.release()
+
+    return jsonify({
+        "frames_analyzed": len(pose_frames),
+        "sample_output": pose_frames[:2]  # proof it worked
+    })
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3000)
+
+FILE 2: templates/index.html
+
+Simple upload UI
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Baseball Swing Upload</title>
+</head>
+<body>
+  <h2>Upload Swing Video</h2>
+
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="video" accept="video/*" required>
+    <br><br>
+    <button type="submit">Analyze Swing</button>
+  </form>
+</body>
+</html>
+
+WHAT TO EXPECT WHEN IT RUNS
+
+Open the Replit web URL
+
+Upload a swing video (phone video works)
+
+You’ll get JSON back like:
+
+{
+  "frames_analyzed": 14,
+  "sample_output": [
+    {
+      "frame": 10,
+      "landmarks": [
+        { "x": 0.51, "y": 0.33, "z": -0.02, "visibility": 0.99 },
+        ...
+      ]
+    }
+  ]
+}
+
+
+That means:
+
+Video read ✔
+
+Frames processed ✔
+
+Pose extracted ✔
+
+You are officially past the hard part.
