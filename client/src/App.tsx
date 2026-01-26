@@ -5,11 +5,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import SwingAnalyzerPage from "@/pages/swing-analyzer";
+import PrivacyPage from "@/pages/privacy";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={SwingAnalyzerPage} />
+      <Route path="/privacy" component={PrivacyPage} />
       <Route component={NotFound} />
     </Switch>
   );
