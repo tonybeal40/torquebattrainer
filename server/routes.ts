@@ -8,9 +8,10 @@ import OpenAI from "openai";
 
 const upload = multer({ dest: "uploads/" });
 
+// Use user's own API key if provided, otherwise fall back to Replit AI Integrations
 const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
 async function generateAIExplanation(
