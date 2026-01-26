@@ -1,0 +1,108 @@
+Good. Step 2 = timing math + classification.
+This is where analysis becomes meaningful, not just technical.
+
+I’ll give you drop-in code that builds directly on what you already have.
+
+WHAT STEP 2 DOES (plain English)
+
+From Step 1 you now have:
+
+hip_start_frame
+
+hand_start_frame
+
+Step 2 will:
+
+Measure the timing gap
+
+Classify the swing sequence into something baseball-relevant
+
+No AI yet. No guessing.
+
+THE LOGIC (keep this in your head)
+timing_gap = hand_start_frame - hip_start_frame
+
+
+Then classify:
+
+hips first, small gap → connected
+
+hips first, big gap → early commit
+
+hands first → arm swing
+
+no clear order → undetermined
+
+missing data → insufficient data
+
+That’s it.
+
+UPDATE YOUR /upload ROUTE (ADD THIS BELOW STEP 1)
+🔴 Add this code after hip_start and hand_start are calculated
+    # ---- TIMING MATH + CLASSIFICATION ----
+
+    classification = "undetermined"
+    timing_gap = None
+
+    if hip_start is not None and hand_start is not None:
+        timing_gap = hand_start - hip_start
+
+        if timing_gap > 0:
+            if timing_gap <= 10:
+                classification = "connected_sequence"
+            else:
+                classification = "early_commit"
+        elif timing_gap < 0:
+            classification = "arm_dominant_swing"
+        else:
+            classification = "simultaneous_start"
+    else:
+        classification = "insufficient_data"
+
+UPDATE YOUR RETURN JSON (REPLACE IT)
+    return jsonify({
+        "frames_processed": len(pose_data),
+        "hip_start_frame": hip_start,
+        "hand_start_frame": hand_start,
+        "timing_gap_frames": timing_gap,
+        "classification": classification
+    })
+
+WHAT YOU SHOULD SEE NOW
+
+Example output:
+
+{
+  "frames_processed": 18,
+  "hip_start_frame": 25,
+  "hand_start_frame": 40,
+  "timing_gap_frames": 15,
+  "classification": "early_commit"
+}
+
+
+That sentence alone is already coaching insight, not software noise.
+
+IMPORTANT REALITY CHECK (DO NOT SKIP)
+
+Confirm all of these are true:
+
+You still get hip and hand frames
+
+You see timing_gap_frames
+
+You see a classification string
+
+No crashes
+
+If any fail, stop and fix before moving on.
+
+WHY THIS STEP IS HUGE (quick truth)
+
+You just taught the system to answer:
+
+“Who started first, and was it too early?”
+
+That’s one of the core questions MLB hitters are evaluated on.
+
+You are now officially doing real swing analysis.

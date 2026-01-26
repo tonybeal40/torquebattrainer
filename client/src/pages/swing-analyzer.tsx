@@ -7,19 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import swingHero from "../assets/images/baseball-swing-hero.png";
 
-interface PoseFrame {
-  frame: number;
-  landmarks: {
-    x: number;
-    y: number;
-    z: number;
-    visibility: number;
-  }[];
-}
-
 interface PoseResponse {
-  frames_analyzed: number;
-  sample_output: PoseFrame[];
+  frames_processed: number;
+  hip_start_frame: number | null;
+  hand_start_frame: number | null;
 }
 
 export default function SwingAnalyzerPage() {
@@ -40,7 +31,7 @@ export default function SwingAnalyzerPage() {
       const formData = new FormData();
       formData.append("video", file);
 
-      const res = await fetch("/upload", {
+      const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
@@ -135,7 +126,7 @@ export default function SwingAnalyzerPage() {
               className="text-sm sm:text-base text-slate-300 max-w-xl"
               data-testid="text-subtitle"
             >
-              Drop in any batting video from your phone. We sample frames, run MediaPipe Pose, and return raw body landmarks so you know the analyzer is truly reading your swings movement.
+              Drop in any batting video from your phone. We sample frames, run MediaPipe Pose, and return raw body landmarks so you know the analyzer is truly reading your swing's movement.
             </p>
           </div>
 
@@ -195,7 +186,7 @@ export default function SwingAnalyzerPage() {
                   className="text-xs sm:text-sm text-slate-300"
                   data-testid="text-form-caption"
                 >
-                  MP4 / MOV from your phone is perfect. We1ll automatically sample frames and run MediaPipe Pose on each key moment.
+                  MP4 / MOV from your phone is perfect. We'll automatically sample frames and run MediaPipe Pose on each key moment.
                 </p>
               </div>
 
@@ -245,7 +236,7 @@ export default function SwingAnalyzerPage() {
                       className="h-1.5 bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-emerald-400 [&>div]:via-cyan-400 [&>div]:to-sky-400"
                     />
                     <p className="text-[11px] text-slate-400">
-                      We&apos;re reading frames and extracting pose landmarks. This is the hard partand the important proof.
+                      We're reading frames and extracting pose landmarks. This is the hard part—and the important proof.
                     </p>
                   </div>
                 )}
@@ -260,18 +251,42 @@ export default function SwingAnalyzerPage() {
                 )}
 
                 {result && (
-                  <div className="space-y-2 pt-2">
+                  <div className="space-y-3 pt-2">
                     <p
                       className="text-xs font-medium text-emerald-400"
                       data-testid="status-success"
                     >
-                      Pose extracted  b7 {result.frames_analyzed} frames analyzed.
+                      Analysis complete ✓ {result.frames_processed} frames processed.
                     </p>
+                    
+                    {result.hip_start_frame !== null && result.hand_start_frame !== null && (
+                      <div className="space-y-2 rounded-lg border border-emerald-400/30 bg-emerald-400/5 p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                          Movement Sequence Detected
+                        </p>
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div data-testid="result-hip">
+                            <span className="text-slate-400">Hip start:</span>
+                            <span className="ml-2 font-semibold text-slate-50">Frame {result.hip_start_frame}</span>
+                          </div>
+                          <div data-testid="result-hand">
+                            <span className="text-slate-400">Hand start:</span>
+                            <span className="ml-2 font-semibold text-slate-50">Frame {result.hand_start_frame}</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400">
+                          {result.hip_start_frame < result.hand_start_frame 
+                            ? "✓ Proper sequence: Hips leading hands (good mechanics)" 
+                            : "⚠ Hands leading hips (early commit detected)"}
+                        </p>
+                      </div>
+                    )}
+
                     <p
                       className="text-[11px] text-slate-400"
                       data-testid="text-proof-explainer"
                     >
-                      Below is a truncated sample of the raw pose landmarks returned by the pipeline. This is what you&apos;d feed into your coaching or analytics layers.
+                      Raw response JSON is shown below in the pipeline console.
                     </p>
                   </div>
                 )}
@@ -297,17 +312,9 @@ export default function SwingAnalyzerPage() {
                 {result
                   ? JSON.stringify(result, null, 2)
                   : `{
-  "frames_analyzed": 0,
-  "sample_output": [
-    {
-      "frame": 10,
-      "landmarks": [
-        { "x": 0.51, "y": 0.33, "z": -0.02, "visibility": 0.99 },
-        { "x": 0.49, "y": 0.40, "z": -0.01, "visibility": 0.98 },
-        // ...
-      ]
-    }
-  ]
+  "frames_processed": 18,
+  "hip_start_frame": 25,
+  "hand_start_frame": 40
 }`}
               </pre>
             </ScrollArea>
