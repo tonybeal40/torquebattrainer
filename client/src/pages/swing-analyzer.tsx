@@ -119,7 +119,21 @@ export default function SwingAnalyzerPage() {
             )}
 
             <p className="text-xs text-slate-500 text-center pt-2">
-              Feedback is generated from swing sequence and balance patterns commonly evaluated by coaches.
+              Powered by Late-Decision Swing Analysis™
+            </p>
+
+            <details className="text-xs text-slate-400">
+              <summary className="cursor-pointer hover:text-slate-300">
+                Why this analysis is different
+              </summary>
+              <p className="mt-2 pl-3 border-l border-slate-700">
+                This feedback focuses on decision timing and balance under game speed,
+                not just swing positions or angles.
+              </p>
+            </details>
+
+            <p className="text-xs text-slate-500 text-center">
+              Instructional feedback only. Designed to support training, not replace coaching.
             </p>
 
             <Button
@@ -142,7 +156,10 @@ export default function SwingAnalyzerPage() {
           <h1 className="text-2xl font-semibold text-sky-400" data-testid="text-title">
             Baseball Swing Analysis
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-slate-300">
+            Late-Decision Swing Analysis™
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
             Game-relevant swing feedback from video
           </p>
         </header>
@@ -217,8 +234,7 @@ export default function SwingAnalyzerPage() {
           </form>
 
           <p className="mt-5 text-xs text-slate-500 text-center">
-            This tool provides instructional feedback based on movement patterns.
-            It is not a medical or injury-diagnostic system.
+            Instructional feedback only. Designed to support training, not replace coaching.
           </p>
         </Card>
       </div>

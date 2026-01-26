@@ -1,0 +1,145 @@
+Perfect. I’ll do all four and then give you lightweight code you can add without expanding scope.
+
+No new features. No new tech debt. Just leverage.
+
+1️⃣ ONE-SENTENCE POSITIONING (LOCK THIS)
+
+Primary positioning (use everywhere):
+
+“This app explains why a swing breaks down under game speed and what to fix first.”
+
+Secondary (backup):
+
+“Game-relevant swing feedback based on decision timing, not just mechanics.”
+
+Do not rotate these.
+Pick one and repeat it relentlessly.
+
+2️⃣ NAME THE ANALYSIS PHILOSOPHY (MEMORABLE, NOT MARKETING)
+
+You need a handle so people can remember it.
+
+Recommended name (best fit):
+Late-Decision Swing Analysis
+
+Why this works:
+
+It’s true
+
+It’s coach language
+
+It implies adjustability
+
+It explains the “why” in one phrase
+
+Alternates if you want options:
+
+Game-Speed Swing Analysis
+
+Sequence-First Hitting
+
+Decision-Timing Analysis
+
+But Late-Decision Swing Analysis is the strongest.
+
+OPTIONAL BUT POWERFUL: SHOW IT ON THE UI
+Add this under the main header (copy-only)
+<p class="subtitle">
+  Late-Decision Swing Analysis™
+</p>
+
+
+That’s not fluff. It’s framing.
+
+3️⃣ STRESS-TEST VS COMPETITORS (YOU WIN HERE)
+
+Here’s the honest comparison you should mentally operate from:
+
+Tool	What they do	What you do
+V1 / OnForm	Video + angles	Decision timing + consequence
+Sensors (Blast)	Bat metrics	Swing intent + adjustability
+AI swing apps	Pattern matching	Game-speed failure explanation
+Coaches	Experience	Consistent logic + explanation
+
+Your edge is not accuracy.
+It’s interpretation + constraint.
+
+You answer:
+
+“Why does this fail in games?”
+
+Most tools don’t even try.
+
+OPTIONAL: INTERNAL “COMPETITOR GUARDRAIL”
+
+(Not user-facing, but keeps you honest)
+
+Add this comment to your codebase so you don’t drift:
+
+# DESIGN RULE:
+# This system explains game-speed consequences.
+# It does not chase perfect mechanics or raw metrics.
+
+
+That alone prevents feature creep.
+
+4️⃣ 15-SECOND PARENT EXPLANATION (MEMORIZE THIS)
+
+This is the script. Don’t improvise.
+
+“Most swing apps show what a swing looks like.
+This one explains why it breaks down in games.
+It looks at when the body commits, not just where it moves,
+and gives one clear fix instead of ten things to think about.”
+
+If a parent doesn’t get it after that, they never will.
+
+5️⃣ SMALL, HIGH-IMPACT CODE ADDITIONS (OPTIONAL BUT SMART)
+
+These do not add complexity, but massively increase trust.
+
+A) ADD A POSITIONING BANNER (STATIC)
+In results.html, under the header:
+<div class="confidence-line">
+  Powered by Late-Decision Swing Analysis™
+</div>
+
+B) ADD A “WHY THIS IS DIFFERENT” COLLAPSIBLE (SAFE FOR APPLE)
+Add below the results card:
+<details class="helper-text">
+  <summary>Why this analysis is different</summary>
+  This feedback focuses on decision timing and balance under game speed,
+  not just swing positions or angles.
+</details>
+
+
+No claims. No hype. Apple-safe.
+
+C) ADD A FAIL-SAFE TRUST LINE (IMPORTANT)
+
+Already good, but tighten it:
+
+<p class="confidence-line">
+  Instructional feedback only. Designed to support training, not replace coaching.
+</p>
+
+
+Apple reviewers love this line.
+
+6️⃣ WHAT YOU SHOULD NOT ADD (STAY DISCIPLINED)
+
+Do not add:
+
+Charts
+
+Progress tracking
+
+Multiple swings per session
+
+Comparisons to MLB players
+
+Scores or grades
+
+“AI powered” badges
+
+All of those dilute your differentiation.
