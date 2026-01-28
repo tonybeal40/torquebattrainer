@@ -262,19 +262,22 @@ export default function SwingAnalyzerPage() {
         credentials: "include",
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Upload failed");
+        const errorMessage = data.hint || data.error || "Upload failed";
+        throw new Error(errorMessage);
       }
 
-      const data: PoseResponse = await res.json();
-      setResult(data);
+      setResult(data as PoseResponse);
       
       if (isAuthenticated) {
         fetchSwingHistory();
       }
     } catch (err) {
-      setError("Something went wrong while analyzing the swing.");
-      console.error(err);
+      const message = err instanceof Error ? err.message : "Something went wrong while analyzing the swing.";
+      setError(message);
+      console.error("Upload error:", err);
     } finally {
       setIsUploading(false);
     }
