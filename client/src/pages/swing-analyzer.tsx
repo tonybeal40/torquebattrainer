@@ -29,6 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VideoPlayer } from "@/components/video-player";
+import { exportSwingToPDF } from "@/lib/pdf-export";
 
 interface PoseResponse {
   id: string | null;
@@ -41,6 +43,7 @@ interface PoseResponse {
   ai_explanation: string;
   game_readiness: number;
   contact_speed_estimate: string;
+  created_at: string;
 }
 
 interface SwingHistory {
@@ -371,13 +374,8 @@ export default function SwingAnalyzerPage() {
             <Card className="border border-slate-800 bg-slate-950 p-5 space-y-5">
               {videoPreview && (
                 <div data-testid="section-video-preview">
-                  <p className="text-[13px] text-slate-400 mb-2">Your Swing</p>
-                  <video
-                    ref={videoRef}
-                    src={videoPreview}
-                    controls
-                    className="w-full rounded-lg border border-slate-700"
-                  />
+                  <p className="text-[13px] text-slate-400 mb-2">Your Swing (frame-by-frame controls below)</p>
+                  <VideoPlayer src={videoPreview} />
                 </div>
               )}
 
@@ -427,6 +425,27 @@ export default function SwingAnalyzerPage() {
                   data-testid="button-share"
                 >
                   Share
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (result) {
+                      exportSwingToPDF({
+                        id: result.id || "analysis",
+                        classification: result.classification,
+                        gameReadiness: result.game_readiness,
+                        contactSpeedEstimate: result.contact_speed_estimate,
+                        timingGapFrames: result.timing_gap_frames,
+                        diagnoses: result.diagnoses,
+                        aiExplanation: result.ai_explanation,
+                        createdAt: result.created_at,
+                      }, user?.firstName || undefined);
+                    }
+                  }}
+                  variant="outline"
+                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+                  data-testid="button-export-pdf"
+                >
+                  Export PDF
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -668,12 +687,8 @@ export default function SwingAnalyzerPage() {
 
             {videoPreview && (
               <div data-testid="video-preview">
-                <p className="text-[13px] text-slate-400 mb-2">Preview</p>
-                <video
-                  src={videoPreview}
-                  controls
-                  className="w-full rounded-lg border border-slate-700 max-h-48"
-                />
+                <p className="text-[13px] text-slate-400 mb-2">Preview (use controls for slow-motion)</p>
+                <VideoPlayer src={videoPreview} className="max-h-64" />
               </div>
             )}
 
@@ -711,7 +726,16 @@ export default function SwingAnalyzerPage() {
 
         {isAuthenticated && swingHistory.length > 0 && (
           <Card className="mt-6 border border-slate-800 bg-slate-950 p-5">
-            <h3 className="text-sm font-semibold text-slate-100 mb-3">Recent Swings</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-semibold text-slate-100">Recent Swings</h3>
+              <a 
+                href="/progress" 
+                className="text-xs text-sky-400 hover:text-sky-300"
+                data-testid="link-progress-dashboard"
+              >
+                View Progress →
+              </a>
+            </div>
             <div className="space-y-2">
               {swingHistory.slice(0, 3).map((swing) => (
                 <div key={swing.id} className="flex justify-between items-center p-2 rounded bg-slate-900">

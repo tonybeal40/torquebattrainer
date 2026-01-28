@@ -10,6 +10,7 @@ import TermsPage from "@/pages/terms";
 import SwingViewPage from "@/pages/swing-view";
 import AgeVerificationPage from "@/pages/age-verification";
 import AppleSignInSetupPage from "@/pages/apple-signin-setup";
+import ProgressDashboardPage from "@/pages/progress-dashboard";
 import { useEffect, useState } from "react";
 
 function AgeGate({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/age-verify" component={AgeVerificationPage} />
       <Route path="/apple-signin-setup" component={AppleSignInSetupPage} />
+      <Route path="/progress" component={ProgressDashboardPage} />
       <Route path="/swing/:id" component={SwingViewPage} />
       <Route path="/">
         <AgeGate>

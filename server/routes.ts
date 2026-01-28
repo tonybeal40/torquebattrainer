@@ -248,7 +248,8 @@ export async function registerRoutes(
 
       return res.json({
         ...analysisResult,
-        id: savedAnalysis?.id || null
+        id: savedAnalysis?.id || null,
+        created_at: savedAnalysis?.createdAt?.toISOString() || new Date().toISOString()
       });
       
     } catch (error) {
