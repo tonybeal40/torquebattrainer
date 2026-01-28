@@ -6,12 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import SwingAnalyzerPage from "@/pages/swing-analyzer";
 import PrivacyPage from "@/pages/privacy";
+import SwingViewPage from "@/pages/swing-view";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={SwingAnalyzerPage} />
       <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/swing/:id" component={SwingViewPage} />
       <Route component={NotFound} />
     </Switch>
   );

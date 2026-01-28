@@ -1,38 +1,48 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { 
+  swingAnalyses, 
+  proSwingExamples,
+  type SwingAnalysis, 
+  type InsertSwingAnalysis,
+  type ProSwingExample 
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  saveSwingAnalysis(analysis: InsertSwingAnalysis): Promise<SwingAnalysis>;
+  getSwingAnalysesByUser(userId: string): Promise<SwingAnalysis[]>;
+  getSwingAnalysisById(id: string): Promise<SwingAnalysis | undefined>;
+  getProSwingExamples(): Promise<ProSwingExample[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async saveSwingAnalysis(analysis: InsertSwingAnalysis): Promise<SwingAnalysis> {
+    const [saved] = await db
+      .insert(swingAnalyses)
+      .values(analysis)
+      .returning();
+    return saved;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getSwingAnalysesByUser(userId: string): Promise<SwingAnalysis[]> {
+    return await db
+      .select()
+      .from(swingAnalyses)
+      .where(eq(swingAnalyses.userId, userId))
+      .orderBy(desc(swingAnalyses.createdAt));
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getSwingAnalysisById(id: string): Promise<SwingAnalysis | undefined> {
+    const [analysis] = await db
+      .select()
+      .from(swingAnalyses)
+      .where(eq(swingAnalyses.id, id));
+    return analysis;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getProSwingExamples(): Promise<ProSwingExample[]> {
+    return await db.select().from(proSwingExamples);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

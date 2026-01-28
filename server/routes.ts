@@ -5,10 +5,15 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import OpenAI from "openai";
+import { z } from "zod";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 
 const upload = multer({ dest: "uploads/" });
 
-// Use user's own API key if provided, otherwise fall back to Replit AI Integrations
+const uploadBodySchema = z.object({
+  pitch_type: z.enum(["unknown", "fastball", "breaking"]).optional().default("unknown"),
+});
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   baseURL: process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
@@ -47,6 +52,41 @@ Keep it short. No jargon. Coach tone.`;
   });
 
   return response.choices[0]?.message?.content || "Unable to generate explanation.";
+}
+
+async function generateTrainingPlan(
+  analyses: any[]
+): Promise<string> {
+  const recentAnalyses = analyses.slice(0, 5);
+  const patterns = recentAnalyses.map(a => ({
+    classification: a.classification,
+    gameReadiness: a.gameReadiness,
+    diagnoses: a.diagnoses
+  }));
+
+  const prompt = `You are a professional baseball hitting coach creating a personalized training plan.
+
+Based on these recent swing analyses:
+${JSON.stringify(patterns, null, 2)}
+
+Create a focused 1-week training plan with:
+1. Primary focus area (based on recurring patterns)
+2. Daily drill schedule (15-20 min sessions)
+3. Key cues to remember
+4. Progress indicators to track
+
+Keep it actionable and realistic for a youth/amateur player.`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: "You are an elite baseball hitting coach." },
+      { role: "user", content: prompt }
+    ],
+    temperature: 0.5
+  });
+
+  return response.choices[0]?.message?.content || "Unable to generate training plan.";
 }
 
 function calculateGameReadiness(
@@ -141,48 +181,43 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Create uploads directory if it doesn't exist
+  await setupAuth(app);
+  registerAuthRoutes(app);
+
   if (!fs.existsSync("uploads")) {
     fs.mkdirSync("uploads");
   }
 
-  app.post("/api/upload", upload.single("video"), async (req, res) => {
+  app.post("/api/upload", upload.single("video"), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No video file uploaded" });
       }
 
-      // Note: Actual video processing with OpenCV + MediaPipe requires Python
-      // This is a stub endpoint that returns the expected format
-      // 
-      // In production, you would:
-      // 1. Run your Python Flask server with the hip/hand detection code
-      // 2. Either proxy to it from here, or point frontend directly to Python backend
-      // 3. Or use child_process to call a Python script from Node.js
-      
-      // Sample pose data (would come from Python/MediaPipe in production)
+      const bodyResult = uploadBodySchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        return res.status(400).json({ error: "Invalid request data", details: bodyResult.error.issues });
+      }
+
+      const pitchType = bodyResult.data.pitch_type;
+      const userId = req.user?.claims?.sub || null;
+
       const hip_start = 25;
       const hand_start = 40;
       const frames_processed = 18;
 
-      // Classify the swing
       const { classification, timing_gap, diagnoses } = classifySwing(hip_start, hand_start);
-
-      // Calculate game readiness score
       const game_readiness = calculateGameReadiness(classification, diagnoses, timing_gap);
 
-      // Calculate contact efficiency
       const pitchIssues: string[] = [];
       const contact_efficiency = calculateContactEfficiency(game_readiness, classification, diagnoses, timing_gap, pitchIssues);
       const contact_speed_estimate = getContactEfficiencyLabel(contact_efficiency);
 
-      // Generate AI coaching explanation
       const ai_explanation = await generateAIExplanation(classification, diagnoses, timing_gap);
 
-      // Clean up uploaded file
       fs.unlinkSync(req.file.path);
 
-      return res.json({
+      const analysisResult = {
         frames_processed,
         hip_start_frame: hip_start,
         hand_start_frame: hand_start,
@@ -192,11 +227,110 @@ export async function registerRoutes(
         ai_explanation,
         game_readiness,
         contact_speed_estimate
+      };
+
+      let savedAnalysis = null;
+      if (userId) {
+        savedAnalysis = await storage.saveSwingAnalysis({
+          userId,
+          pitchType,
+          framesProcessed: frames_processed,
+          hipStartFrame: hip_start,
+          handStartFrame: hand_start,
+          timingGapFrames: timing_gap,
+          classification,
+          diagnoses,
+          aiExplanation: ai_explanation,
+          gameReadiness: game_readiness,
+          contactSpeedEstimate: contact_speed_estimate
+        });
+      }
+
+      return res.json({
+        ...analysisResult,
+        id: savedAnalysis?.id || null
       });
       
     } catch (error) {
       console.error("Error processing video:", error);
       return res.status(500).json({ error: "Failed to process video" });
+    }
+  });
+
+  app.get("/api/swing-history", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const analyses = await storage.getSwingAnalysesByUser(userId);
+      res.json(analyses);
+    } catch (error) {
+      console.error("Error fetching swing history:", error);
+      res.status(500).json({ error: "Failed to fetch swing history" });
+    }
+  });
+
+  app.get("/api/swing/:id", async (req, res) => {
+    try {
+      const analysis = await storage.getSwingAnalysisById(req.params.id);
+      if (!analysis) {
+        return res.status(404).json({ error: "Analysis not found" });
+      }
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error fetching swing analysis:", error);
+      res.status(500).json({ error: "Failed to fetch swing analysis" });
+    }
+  });
+
+  app.get("/api/pro-examples", async (req, res) => {
+    try {
+      const examples = await storage.getProSwingExamples();
+      
+      if (examples.length === 0) {
+        return res.json([
+          {
+            id: "pro-connected",
+            name: "Connected Sequence (Ideal)",
+            description: "Hips lead hands with tight 5-8 frame gap. Maximum power transfer.",
+            classification: "connected_sequence",
+            timingGapFrames: 6,
+            gameReadiness: 95,
+            contactSpeedEstimate: "High",
+            diagnoses: ["good_hip_hand_connection"]
+          },
+          {
+            id: "pro-adjustable",
+            name: "Adjustable Swing",
+            description: "Slightly wider timing allows for pitch recognition. Good for breaking balls.",
+            classification: "connected_sequence",
+            timingGapFrames: 9,
+            gameReadiness: 85,
+            contactSpeedEstimate: "Moderate–High",
+            diagnoses: ["good_hip_hand_connection"]
+          }
+        ]);
+      }
+      
+      res.json(examples);
+    } catch (error) {
+      console.error("Error fetching pro examples:", error);
+      res.status(500).json({ error: "Failed to fetch pro examples" });
+    }
+  });
+
+  app.get("/api/training-plan", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const analyses = await storage.getSwingAnalysesByUser(userId);
+      
+      if (analyses.length === 0) {
+        return res.status(400).json({ error: "No swing history available. Upload some swings first." });
+      }
+
+      const plan = await generateTrainingPlan(analyses);
+      res.json({ plan });
+    } catch (error) {
+      console.error("Error generating training plan:", error);
+      res.status(500).json({ error: "Failed to generate training plan" });
     }
   });
 
