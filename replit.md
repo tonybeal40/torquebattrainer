@@ -21,11 +21,19 @@ Preferred communication style: Simple, everyday language.
 - **Animation:** Framer Motion for UI animations
 
 ### Backend Architecture
-- **Runtime:** Node.js with Express
-- **Language:** TypeScript with ES modules
+- **Runtime:** Node.js with Express + Python for video analysis
+- **Language:** TypeScript with ES modules (Node), Python 3.11 (video processing)
 - **API Pattern:** RESTful endpoints under `/api/*`
 - **File Uploads:** Multer for handling video file uploads
-- **AI Integration:** OpenAI API for generating coaching explanations from swing analysis data
+- **Video Analysis:** MediaPipe Pose + OpenCV for real pose estimation
+- **AI Integration:** OpenAI API (user's own key) for generating coaching explanations
+
+### Video Analysis Pipeline
+- **Library:** MediaPipe Pose (Google's free, open-source pose estimation)
+- **Process:** Python script (`server/swing_analyzer.py`) analyzes uploaded videos frame-by-frame
+- **Detection:** Tracks hip and wrist landmarks to detect movement start times
+- **Integration:** Node.js spawns Python process, parses JSON results
+- **Timeout:** 60-second limit per video analysis
 
 ### Data Storage
 - **Database:** PostgreSQL with Drizzle ORM
