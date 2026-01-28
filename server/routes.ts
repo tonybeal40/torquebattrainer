@@ -4,9 +4,82 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { spawn } from "child_process";
 import OpenAI from "openai";
 import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+
+interface PoseAnalysisResult {
+  frames_processed: number;
+  fps?: number;
+  hip_start_frame: number | null;
+  hand_start_frame: number | null;
+  error: string | null;
+}
+
+async function runPythonAnalyzer(videoPath: string): Promise<PoseAnalysisResult> {
+  return new Promise((resolve) => {
+    const pythonProcess = spawn("python", ["server/swing_analyzer.py", videoPath]);
+    
+    let stdout = "";
+    let stderr = "";
+    
+    const timeout = setTimeout(() => {
+      pythonProcess.kill();
+      resolve({
+        frames_processed: 0,
+        hip_start_frame: null,
+        hand_start_frame: null,
+        error: "Analysis timed out after 60 seconds"
+      });
+    }, 60000);
+    
+    pythonProcess.stdout.on("data", (data) => {
+      stdout += data.toString();
+    });
+    
+    pythonProcess.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+    
+    pythonProcess.on("close", (code) => {
+      clearTimeout(timeout);
+      
+      if (code !== 0) {
+        console.error("Python analyzer stderr:", stderr);
+        resolve({
+          frames_processed: 0,
+          hip_start_frame: null,
+          hand_start_frame: null,
+          error: `Analysis failed: ${stderr || "Unknown error"}`
+        });
+        return;
+      }
+      
+      try {
+        const result = JSON.parse(stdout);
+        resolve(result);
+      } catch (e) {
+        resolve({
+          frames_processed: 0,
+          hip_start_frame: null,
+          hand_start_frame: null,
+          error: "Failed to parse analysis result"
+        });
+      }
+    });
+    
+    pythonProcess.on("error", (err) => {
+      clearTimeout(timeout);
+      resolve({
+        frames_processed: 0,
+        hip_start_frame: null,
+        hand_start_frame: null,
+        error: `Failed to start analyzer: ${err.message}`
+      });
+    });
+  });
+}
 
 const upload = multer({ dest: "uploads/" });
 
@@ -202,9 +275,24 @@ export async function registerRoutes(
       const pitchType = bodyResult.data.pitch_type;
       const userId = req.user?.claims?.sub || null;
 
-      const hip_start = 25;
-      const hand_start = 40;
-      const frames_processed = 18;
+      console.log("Running pose analysis on video:", req.file.path);
+      const poseResult = await runPythonAnalyzer(req.file.path);
+      console.log("Pose analysis result:", poseResult);
+
+      if (poseResult.error || poseResult.frames_processed < 10) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (e) {}
+        return res.status(422).json({ 
+          error: poseResult.error || "Video too short for analysis",
+          frames_processed: poseResult.frames_processed,
+          hint: "Please upload a video showing a full swing (at least 1-2 seconds)"
+        });
+      }
+
+      const hip_start = poseResult.hip_start_frame;
+      const hand_start = poseResult.hand_start_frame;
+      const frames_processed = poseResult.frames_processed;
 
       const { classification, timing_gap, diagnoses } = classifySwing(hip_start, hand_start);
       const game_readiness = calculateGameReadiness(classification, diagnoses, timing_gap);
@@ -215,7 +303,11 @@ export async function registerRoutes(
 
       const ai_explanation = await generateAIExplanation(classification, diagnoses, timing_gap);
 
-      fs.unlinkSync(req.file.path);
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (e) {
+        console.error("Failed to delete uploaded file:", e);
+      }
 
       const analysisResult = {
         frames_processed,
