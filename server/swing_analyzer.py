@@ -2,15 +2,25 @@
 """
 Baseball Swing Analyzer using MediaPipe Pose Estimation
 Detects hip and hand movement timing to classify swing mechanics.
+Uses MediaPipe Tasks API (0.10.x+)
 """
 
 import sys
 import json
 import cv2
-import mediapipe as mp
 import numpy as np
+import urllib.request
+import os
 
-mp_pose = mp.solutions.pose
+MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
+MODEL_PATH = "/tmp/pose_landmarker_lite.task"
+
+def download_model():
+    """Download the pose landmarker model if not present."""
+    if not os.path.exists(MODEL_PATH):
+        print(f"Downloading model to {MODEL_PATH}...", file=sys.stderr)
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+    return MODEL_PATH
 
 def analyze_swing(video_path: str) -> dict:
     """
@@ -19,6 +29,12 @@ def analyze_swing(video_path: str) -> dict:
     Returns:
         dict with hip_start_frame, hand_start_frame, frames_processed, and error if any
     """
+    import mediapipe as mp
+    from mediapipe.tasks import python
+    from mediapipe.tasks.python import vision
+    
+    model_path = download_model()
+    
     cap = cv2.VideoCapture(video_path)
     
     if not cap.isOpened():
@@ -31,13 +47,13 @@ def analyze_swing(video_path: str) -> dict:
     hand_positions = []
     frames_processed = 0
     
-    with mp_pose.Pose(
-        static_image_mode=False,
-        model_complexity=1,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5
-    ) as pose:
-        
+    base_options = python.BaseOptions(model_asset_path=model_path)
+    options = vision.PoseLandmarkerOptions(
+        base_options=base_options,
+        output_segmentation_masks=False
+    )
+    
+    with vision.PoseLandmarker.create_from_options(options) as landmarker:
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -46,33 +62,37 @@ def analyze_swing(video_path: str) -> dict:
             frames_processed += 1
             
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = pose.process(frame_rgb)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
             
-            if results.pose_landmarks:
-                landmarks = results.pose_landmarks.landmark
+            result = landmarker.detect(mp_image)
+            
+            if result.pose_landmarks and len(result.pose_landmarks) > 0:
+                landmarks = result.pose_landmarks[0]
                 
-                left_hip = landmarks[mp_pose.PoseLandmark.LEFT_HIP]
-                right_hip = landmarks[mp_pose.PoseLandmark.RIGHT_HIP]
+                left_hip = landmarks[23]
+                right_hip = landmarks[24]
                 hip_x = (left_hip.x + right_hip.x) / 2
                 hip_y = (left_hip.y + right_hip.y) / 2
+                hip_vis = (left_hip.visibility + right_hip.visibility) / 2
                 
-                left_wrist = landmarks[mp_pose.PoseLandmark.LEFT_WRIST]
-                right_wrist = landmarks[mp_pose.PoseLandmark.RIGHT_WRIST]
+                left_wrist = landmarks[15]
+                right_wrist = landmarks[16]
                 hand_x = (left_wrist.x + right_wrist.x) / 2
                 hand_y = (left_wrist.y + right_wrist.y) / 2
+                hand_vis = (left_wrist.visibility + right_wrist.visibility) / 2
                 
                 hip_positions.append({
                     "frame": frames_processed,
                     "x": hip_x,
                     "y": hip_y,
-                    "visibility": (left_hip.visibility + right_hip.visibility) / 2
+                    "visibility": hip_vis
                 })
                 
                 hand_positions.append({
                     "frame": frames_processed,
                     "x": hand_x,
                     "y": hand_y,
-                    "visibility": (left_wrist.visibility + right_wrist.visibility) / 2
+                    "visibility": hand_vis
                 })
             else:
                 hip_positions.append({"frame": frames_processed, "x": None, "y": None, "visibility": 0})
