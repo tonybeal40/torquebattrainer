@@ -334,5 +334,28 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/account", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      await storage.deleteUserData(userId);
+      
+      req.logout((err: any) => {
+        if (err) {
+          console.error("Error during logout:", err);
+        }
+        req.session.destroy((sessionErr: any) => {
+          if (sessionErr) {
+            console.error("Error destroying session:", sessionErr);
+          }
+          res.json({ success: true, message: "Account and all data deleted successfully" });
+        });
+      });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
+
   return httpServer;
 }

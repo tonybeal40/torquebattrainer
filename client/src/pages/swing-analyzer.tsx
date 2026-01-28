@@ -18,8 +18,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PoseResponse {
   id: string | null;
@@ -60,6 +69,80 @@ function getReadinessLabel(score: number): string {
   if (score <= 60) return "Limited game readiness";
   if (score <= 80) return "Competitive readiness";
   return "Advanced readiness";
+}
+
+function DeleteAccountDialog() {
+  const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  const handleDelete = async () => {
+    if (confirmText !== "DELETE") return;
+    
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/account", { method: "DELETE" });
+      if (res.ok) {
+        localStorage.clear();
+        window.location.href = "/";
+      }
+    } catch (error) {
+      console.error("Failed to delete account:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          className="text-red-400 focus:text-red-300 cursor-pointer"
+          data-testid="button-delete-account-trigger"
+        >
+          Delete Account
+        </DropdownMenuItem>
+      </DialogTrigger>
+      <DialogContent className="bg-slate-900 border-slate-700">
+        <DialogHeader>
+          <DialogTitle className="text-slate-100">Delete Account</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            This will permanently delete your account and all associated data, including your swing history. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <p className="text-sm text-slate-300 mb-2">
+            Type <strong className="text-red-400">DELETE</strong> to confirm:
+          </p>
+          <Input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="Type DELETE"
+            className="bg-slate-800 border-slate-600"
+            data-testid="input-delete-confirm"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="border-slate-600"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={confirmText !== "DELETE" || deleting}
+            data-testid="button-confirm-delete"
+          >
+            {deleting ? "Deleting..." : "Delete My Account"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export default function SwingAnalyzerPage() {
@@ -500,13 +583,26 @@ export default function SwingAnalyzerPage() {
         <header className="mb-6 text-center">
           <div className="flex justify-center mb-4">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                {user?.profileImageUrl && (
-                  <img src={user.profileImageUrl} alt="" className="w-8 h-8 rounded-full" />
-                )}
-                <span className="text-sm text-slate-300">{user?.firstName || user?.email}</span>
-                <a href="/api/logout" className="text-xs text-slate-500 hover:text-slate-300">Logout</a>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+                  {user?.profileImageUrl && (
+                    <img src={user.profileImageUrl} alt="" className="w-8 h-8 rounded-full" />
+                  )}
+                  <span className="text-sm text-slate-300">{user?.firstName || user?.email}</span>
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="bg-slate-900 border-slate-700">
+                  <DropdownMenuItem asChild>
+                    <a href="/api/logout" className="cursor-pointer text-slate-200">
+                      Sign Out
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DeleteAccountDialog />
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <a
                 href="/api/login"
@@ -629,6 +725,21 @@ export default function SwingAnalyzerPage() {
             </div>
           </Card>
         )}
+
+        <footer className="mt-8 pb-6 text-center">
+          <div className="flex justify-center gap-4 text-xs text-slate-500">
+            <a href="/terms" className="hover:text-slate-300" data-testid="link-terms">
+              Terms of Service
+            </a>
+            <span>•</span>
+            <a href="/privacy" className="hover:text-slate-300" data-testid="link-privacy">
+              Privacy Policy
+            </a>
+          </div>
+          <p className="mt-2 text-xs text-slate-600">
+            © {new Date().getFullYear()} Torque Bat Trainer. All rights reserved.
+          </p>
+        </footer>
       </div>
     </div>
   );
