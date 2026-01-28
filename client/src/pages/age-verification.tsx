@@ -31,7 +31,7 @@ export default function AgeVerificationPage() {
 
     localStorage.setItem("age_verified", "true");
     localStorage.setItem("age_verified_date", new Date().toISOString());
-    setLocation("/");
+    window.location.href = "/";
   };
 
   return (
