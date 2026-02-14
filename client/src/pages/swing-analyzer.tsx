@@ -243,32 +243,64 @@ export default function SwingAnalyzerPage() {
     setShowOnboarding(false);
   }
 
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return;
 
+    if (file.size > 100 * 1024 * 1024) {
+      setError("Video file is too large (max 100MB). Try trimming your clip to 5-10 seconds.");
+      return;
+    }
+
     setIsUploading(true);
     setError(null);
     setResult(null);
+    setUploadProgress("Uploading video...");
 
     try {
       const formData = new FormData();
       formData.append("video", file);
       formData.append("pitch_type", pitchType);
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
+      const xhr = new XMLHttpRequest();
+      
+      const uploadPromise = new Promise<any>((resolve, reject) => {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const pct = Math.round((event.loaded / event.total) * 100);
+            if (pct < 100) {
+              setUploadProgress(`Uploading video... ${pct}%`);
+            } else {
+              setUploadProgress("Analyzing your swing... this may take a moment");
+            }
+          }
+        };
+        
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(data);
+            } else {
+              reject(new Error(data.hint || data.error || "Upload failed"));
+            }
+          } catch {
+            reject(new Error("Failed to process server response"));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error("Network error — check your connection and try again"));
+        xhr.ontimeout = () => reject(new Error("Upload timed out — try a shorter video clip"));
+        
+        xhr.open("POST", "/api/upload");
+        xhr.withCredentials = true;
+        xhr.timeout = 180000;
+        xhr.send(formData);
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        const errorMessage = data.hint || data.error || "Upload failed";
-        throw new Error(errorMessage);
-      }
-
+      const data = await uploadPromise;
       setResult(data as PoseResponse);
       
       if (isAuthenticated) {
@@ -280,6 +312,7 @@ export default function SwingAnalyzerPage() {
       console.error("Upload error:", err);
     } finally {
       setIsUploading(false);
+      setUploadProgress("");
     }
   }
 
@@ -701,7 +734,7 @@ export default function SwingAnalyzerPage() {
               className="w-full rounded-lg bg-sky-400 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-60"
               data-testid="button-analyze"
             >
-              {isUploading ? "Analyzing..." : "Analyze Swing"}
+              {isUploading ? (uploadProgress || "Analyzing...") : "Analyze Swing"}
             </Button>
 
             {isUploading && (
@@ -711,7 +744,7 @@ export default function SwingAnalyzerPage() {
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   className="h-4 w-4 rounded-full border-2 border-sky-400 border-t-transparent"
                 />
-                Processing video frames...
+                {uploadProgress || "Processing video frames..."}
               </div>
             )}
 

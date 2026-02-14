@@ -30,9 +30,9 @@ async function runPythonAnalyzer(videoPath: string): Promise<PoseAnalysisResult>
         frames_processed: 0,
         hip_start_frame: null,
         hand_start_frame: null,
-        error: "Analysis timed out after 60 seconds"
+        error: "Analysis timed out — try a shorter video clip (under 10 seconds works best)"
       });
-    }, 60000);
+    }, 120000);
     
     pythonProcess.stdout.on("data", (data) => {
       stdout += data.toString();
@@ -81,7 +81,22 @@ async function runPythonAnalyzer(videoPath: string): Promise<PoseAnalysisResult>
   });
 }
 
-const upload = multer({ dest: "uploads/" });
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/webm", "video/mpeg"];
+    const allowedExts = [".mp4", ".mov", ".avi", ".webm", ".mpeg", ".m4v"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(file.mimetype) || allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Unsupported video format: ${file.mimetype}. Please upload MP4, MOV, AVI, or WebM.`));
+    }
+  }
+});
 
 const uploadBodySchema = z.object({
   pitch_type: z.enum(["unknown", "fastball", "breaking"]).optional().default("unknown"),
@@ -261,7 +276,20 @@ export async function registerRoutes(
     fs.mkdirSync("uploads");
   }
 
-  app.post("/api/upload", upload.single("video"), async (req: any, res) => {
+  app.post("/api/upload", (req: any, res, next) => {
+    upload.single("video")(req, res, (err: any) => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res.status(413).json({
+            error: "Video file is too large (max 100MB). Try trimming your clip to 5-10 seconds.",
+            hint: "Slow-motion videos can be very large. Try recording at normal speed or trimming the clip."
+          });
+        }
+        return res.status(400).json({ error: err.message || "Failed to upload video" });
+      }
+      next();
+    });
+  }, async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No video file uploaded" });
