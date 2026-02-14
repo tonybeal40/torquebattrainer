@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { VideoPlayer } from "@/components/video-player";
 import { exportSwingToPDF } from "@/lib/pdf-export";
+import { FuturisticBackground, GlowCard, RadialGauge, ScanLine, HudCorners, PulsingDot } from "@/components/futuristic-bg";
 
 interface PoseResponse {
   id: string | null;
@@ -74,6 +74,12 @@ function getReadinessLabel(score: number): string {
   return "Advanced readiness";
 }
 
+function getReadinessColor(score: number): "emerald" | "amber" | "rose" | "cyan" {
+  if (score >= 70) return "emerald";
+  if (score >= 50) return "amber";
+  return "rose";
+}
+
 function DeleteAccountDialog() {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -107,7 +113,7 @@ function DeleteAccountDialog() {
           Delete Account
         </DropdownMenuItem>
       </DialogTrigger>
-      <DialogContent className="bg-slate-900 border-slate-700">
+      <DialogContent className="bg-slate-950/95 backdrop-blur-xl border-slate-700/50">
         <DialogHeader>
           <DialogTitle className="text-slate-100">Delete Account</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -122,7 +128,7 @@ function DeleteAccountDialog() {
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder="Type DELETE"
-            className="bg-slate-800 border-slate-600"
+            className="bg-slate-900/80 border-slate-600"
             data-testid="input-delete-confirm"
           />
         </div>
@@ -354,277 +360,356 @@ export default function SwingAnalyzerPage() {
 
   if (showOnboarding) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-6">
-        <Card className="border border-slate-800 bg-slate-950 p-6 max-w-md w-full space-y-5">
-          <h2 className="text-xl font-semibold text-sky-400" data-testid="text-onboarding-title">
-            What This App Does
-          </h2>
-          
-          <p className="text-sm text-slate-300 leading-relaxed">
-            This app analyzes swing decision timing, not just positions.
-          </p>
-          
-          <p className="text-sm text-slate-300 leading-relaxed">
-            It looks at when the body commits relative to the hands and explains how that timing affects performance against real pitches.
-          </p>
-          
-          <div className="text-sm text-slate-300 space-y-2">
-            <p>You'll receive:</p>
-            <ul className="list-disc list-inside space-y-1 text-slate-400">
-              <li>One clear diagnosis</li>
-              <li>One correction focus</li>
-              <li>One drill to work on</li>
-            </ul>
-          </div>
-          
-          <p className="text-xs text-slate-500">
-            This tool supports training and coaching. It does not replace in-person instruction.
-          </p>
-          
-          <Button
-            onClick={dismissOnboarding}
-            className="w-full rounded-lg bg-sky-400 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-300"
-            data-testid="button-start-analysis"
-          >
-            Start Analysis
-          </Button>
-        </Card>
+      <div className="min-h-screen bg-[#030712] text-slate-100 flex items-center justify-center px-6 relative overflow-hidden">
+        <FuturisticBackground />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10"
+        >
+          <GlowCard className="p-8 max-w-md w-full space-y-6" glowColor="cyan">
+            <HudCorners />
+            <div className="flex items-center gap-3 mb-2">
+              <PulsingDot color="cyan" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-400 font-mono">System Online</span>
+            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent" data-testid="text-onboarding-title">
+              Late-Decision Swing Analysis
+            </h2>
+            
+            <p className="text-sm text-slate-300 leading-relaxed">
+              This system analyzes swing decision timing, not just positions.
+            </p>
+            
+            <p className="text-sm text-slate-400 leading-relaxed">
+              It detects when the body commits relative to the hands and explains how that timing affects performance against real pitches.
+            </p>
+            
+            <div className="text-sm text-slate-300 space-y-3 border-l-2 border-cyan-500/30 pl-4">
+              <p className="text-cyan-400 text-xs uppercase tracking-wider font-mono">Analysis Output</p>
+              <ul className="space-y-2 text-slate-400">
+                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" /> One clear diagnosis</li>
+                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" /> One correction focus</li>
+                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full" /> One drill to work on</li>
+              </ul>
+            </div>
+            
+            <p className="text-[11px] text-slate-600 font-mono">
+              Instructional feedback only. Designed to support training.
+            </p>
+            
+            <Button
+              onClick={dismissOnboarding}
+              className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-500 py-3 text-sm font-semibold text-white hover:from-cyan-400 hover:to-emerald-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all"
+              data-testid="button-start-analysis"
+            >
+              Initialize Analysis
+            </Button>
+          </GlowCard>
+        </motion.div>
       </div>
     );
   }
 
   if (result) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto max-w-2xl px-6 py-8">
-          <header className="mb-6 text-center">
-            <h1 className="text-2xl font-semibold text-sky-400" data-testid="text-results-title">
-              Swing Analysis Results
+      <div className="min-h-screen bg-[#030712] text-slate-100 relative overflow-hidden">
+        <FuturisticBackground />
+        <div className="relative z-10 mx-auto max-w-3xl px-6 py-8">
+          <motion.header
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <PulsingDot color="emerald" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-mono">Analysis Complete</span>
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent" data-testid="text-results-title">
+              Swing Analysis Report
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
-              Coaching-focused feedback based on swing sequence
-            </p>
-          </header>
+          </motion.header>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="border border-slate-800 bg-slate-950 p-5 space-y-5">
-              {videoPreview && (
-                <div data-testid="section-video-preview">
-                  <p className="text-[13px] text-slate-400 mb-2">Your Swing (frame-by-frame controls below)</p>
-                  <VideoPlayer src={videoPreview} />
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <GlowCard className="p-6 space-y-5" glowColor="cyan">
+                <HudCorners />
+                {videoPreview && (
+                  <div data-testid="section-video-preview">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+                      <p className="text-[11px] uppercase tracking-wider text-cyan-400 font-mono">Video Feed</p>
+                    </div>
+                    <VideoPlayer src={videoPreview} />
+                  </div>
+                )}
+
+                <div className="flex justify-center py-2" data-testid="section-game-readiness">
+                  <RadialGauge
+                    value={result.game_readiness}
+                    label="Readiness"
+                    sublabel={getReadinessLabel(result.game_readiness)}
+                  />
                 </div>
-              )}
 
-              <div data-testid="section-classification">
-                <p className="text-[13px] text-slate-400 mb-1">Swing Sequence</p>
-                <p className="text-base text-slate-100">{formatClassification(result.classification)}</p>
-              </div>
-
-              <div data-testid="section-timing">
-                <p className="text-[13px] text-slate-400 mb-1">Timing Gap</p>
-                <p className="text-base text-slate-100">{result.timing_gap_frames} frames</p>
-              </div>
-
-              {result.diagnoses.length > 0 && (
-                <div data-testid="section-findings">
-                  <p className="text-[13px] text-slate-400 mb-2">Key Findings</p>
-                  <div className="flex flex-wrap gap-2">
-                    {result.diagnoses.map((d, i) => (
-                      <span
-                        key={i}
-                        className="rounded-full bg-slate-800 px-3 py-1.5 text-[13px] text-slate-200"
-                        data-testid={`pill-diagnosis-${i}`}
-                      >
-                        {formatDiagnosis(d)}
-                      </span>
-                    ))}
+                <div className="grid grid-cols-2 gap-4" data-testid="section-stats">
+                  <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/50">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">Classification</p>
+                    <p className="text-sm font-semibold text-white mt-1">{formatClassification(result.classification)}</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/50">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">Timing Gap</p>
+                    <p className="text-sm font-semibold text-white mt-1">
+                      {result.timing_gap_frames !== null ? `${result.timing_gap_frames} frames` : "N/A"}
+                    </p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/50">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">Contact Speed</p>
+                    <p className="text-sm font-semibold text-white mt-1">{result.contact_speed_estimate}</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/50">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">Frames</p>
+                    <p className="text-sm font-semibold text-white mt-1">{result.frames_processed}</p>
                   </div>
                 </div>
-              )}
 
-              <div data-testid="section-game-readiness">
-                <p className="text-[13px] text-slate-400 mb-1">Game-Readiness Index</p>
-                <p className="text-xl font-semibold text-slate-100">{result.game_readiness}/100</p>
-                <p className="text-xs text-slate-400 mt-1">{getReadinessLabel(result.game_readiness)}</p>
-              </div>
+                {result.diagnoses.length > 0 && (
+                  <div data-testid="section-findings">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-mono mb-2">Diagnostics</p>
+                    <div className="flex flex-wrap gap-2">
+                      {result.diagnoses.map((d, i) => (
+                        <span
+                          key={i}
+                          className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 text-[12px] text-cyan-300 font-mono"
+                          data-testid={`pill-diagnosis-${i}`}
+                        >
+                          {formatDiagnosis(d)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-              <div data-testid="section-contact-speed">
-                <p className="text-[13px] text-slate-400 mb-1">Estimated Contact Speed</p>
-                <p className="text-base text-slate-100">{result.contact_speed_estimate}</p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={shareAnalysis}
-                  variant="outline"
-                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
-                  data-testid="button-share"
-                >
-                  Share
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (result) {
-                      exportSwingToPDF({
-                        id: result.id || "analysis",
-                        classification: result.classification,
-                        gameReadiness: result.game_readiness,
-                        contactSpeedEstimate: result.contact_speed_estimate,
-                        timingGapFrames: result.timing_gap_frames,
-                        diagnoses: result.diagnoses,
-                        aiExplanation: result.ai_explanation,
-                        createdAt: result.created_at,
-                      }, user?.firstName || undefined);
-                    }
-                  }}
-                  variant="outline"
-                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
-                  data-testid="button-export-pdf"
-                >
-                  Export PDF
-                </Button>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
-                      data-testid="button-compare"
-                    >
-                      Compare
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-950 border-slate-800 text-slate-100 max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle className="text-sky-400">Compare Swings</DialogTitle>
-                    </DialogHeader>
-                    <Tabs defaultValue="history" className="w-full">
-                      <TabsList className="bg-slate-900 w-full">
-                        <TabsTrigger value="history" className="flex-1">Your History</TabsTrigger>
-                        <TabsTrigger value="examples" className="flex-1">Pro Examples</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="history" className="space-y-2 max-h-60 overflow-y-auto">
-                        {swingHistory.length === 0 ? (
-                          <p className="text-sm text-slate-400 py-4 text-center">
-                            {isAuthenticated ? "No previous swings yet." : "Login to save swing history."}
-                          </p>
-                        ) : (
-                          swingHistory.map((swing) => (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={shareAnalysis}
+                    variant="outline"
+                    className="flex-1 border-slate-700/50 text-slate-300 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-300 transition-all"
+                    data-testid="button-share"
+                  >
+                    Share
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (result) {
+                        exportSwingToPDF({
+                          id: result.id || "analysis",
+                          classification: result.classification,
+                          gameReadiness: result.game_readiness,
+                          contactSpeedEstimate: result.contact_speed_estimate,
+                          timingGapFrames: result.timing_gap_frames,
+                          diagnoses: result.diagnoses,
+                          aiExplanation: result.ai_explanation,
+                          createdAt: result.created_at,
+                        }, user?.firstName || undefined);
+                      }
+                    }}
+                    variant="outline"
+                    className="flex-1 border-slate-700/50 text-slate-300 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-300 transition-all"
+                    data-testid="button-export-pdf"
+                  >
+                    Export PDF
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-slate-700/50 text-slate-300 hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-300 transition-all"
+                        data-testid="button-compare"
+                      >
+                        Compare
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-slate-950/95 backdrop-blur-xl border-slate-700/50 text-slate-100 max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Compare Swings</DialogTitle>
+                      </DialogHeader>
+                      <Tabs defaultValue="history" className="w-full">
+                        <TabsList className="bg-slate-900/80 w-full border border-slate-700/30">
+                          <TabsTrigger value="history" className="flex-1 data-[state=active]:bg-cyan-500/10 data-[state=active]:text-cyan-300">Your History</TabsTrigger>
+                          <TabsTrigger value="examples" className="flex-1 data-[state=active]:bg-cyan-500/10 data-[state=active]:text-cyan-300">Pro Examples</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="history" className="space-y-2 max-h-60 overflow-y-auto">
+                          {swingHistory.length === 0 ? (
+                            <p className="text-sm text-slate-500 py-4 text-center font-mono">
+                              {isAuthenticated ? "No previous swings yet." : "Login to save swing history."}
+                            </p>
+                          ) : (
+                            swingHistory.map((swing) => (
+                              <button
+                                key={swing.id}
+                                onClick={() => setCompareSwing(swing)}
+                                className={`w-full text-left p-3 rounded-lg border transition-all ${
+                                  compareSwing?.id === swing.id 
+                                    ? "border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_10px_rgba(6,182,212,0.1)]" 
+                                    : "border-slate-700/30 hover:bg-slate-800/50 hover:border-slate-600/50"
+                                }`}
+                              >
+                                <p className="text-sm font-medium">{formatClassification(swing.classification)}</p>
+                                <p className="text-xs text-slate-400 font-mono">
+                                  Readiness: {swing.gameReadiness}/100 | {new Date(swing.createdAt).toLocaleDateString()}
+                                </p>
+                              </button>
+                            ))
+                          )}
+                        </TabsContent>
+                        <TabsContent value="examples" className="space-y-2 max-h-60 overflow-y-auto">
+                          {proExamples.map((example) => (
                             <button
-                              key={swing.id}
-                              onClick={() => setCompareSwing(swing)}
-                              className={`w-full text-left p-3 rounded-lg border ${
-                                compareSwing?.id === swing.id 
-                                  ? "border-sky-400 bg-sky-400/10" 
-                                  : "border-slate-700 hover:bg-slate-800"
+                              key={example.id}
+                              onClick={() => setCompareSwing(example)}
+                              className={`w-full text-left p-3 rounded-lg border transition-all ${
+                                compareSwing?.id === example.id 
+                                  ? "border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_10px_rgba(6,182,212,0.1)]" 
+                                  : "border-slate-700/30 hover:bg-slate-800/50 hover:border-slate-600/50"
                               }`}
                             >
-                              <p className="text-sm font-medium">{formatClassification(swing.classification)}</p>
-                              <p className="text-xs text-slate-400">
-                                Readiness: {swing.gameReadiness}/100 • {new Date(swing.createdAt).toLocaleDateString()}
-                              </p>
+                              <p className="text-sm font-medium">{example.name}</p>
+                              <p className="text-xs text-slate-400">{example.description}</p>
                             </button>
-                          ))
-                        )}
-                      </TabsContent>
-                      <TabsContent value="examples" className="space-y-2 max-h-60 overflow-y-auto">
-                        {proExamples.map((example) => (
-                          <button
-                            key={example.id}
-                            onClick={() => setCompareSwing(example)}
-                            className={`w-full text-left p-3 rounded-lg border ${
-                              compareSwing?.id === example.id 
-                                ? "border-sky-400 bg-sky-400/10" 
-                                : "border-slate-700 hover:bg-slate-800"
-                            }`}
-                          >
-                            <p className="text-sm font-medium">{example.name}</p>
-                            <p className="text-xs text-slate-400">{example.description}</p>
-                          </button>
-                        ))}
-                      </TabsContent>
-                    </Tabs>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </Card>
+                          ))}
+                        </TabsContent>
+                      </Tabs>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </GlowCard>
+            </motion.div>
 
             <div className="space-y-6">
-              {compareSwing && (
-                <Card className="border border-sky-400/30 bg-sky-400/5 p-5 space-y-4">
-                  <p className="text-[13px] font-medium text-sky-400">Comparison</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-slate-400 text-xs mb-1">Your Swing</p>
-                      <p className="text-slate-100">{result.game_readiness}/100</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400 text-xs mb-1">
-                        {"name" in compareSwing ? compareSwing.name : "Previous"}
+              <AnimatePresence>
+                {compareSwing && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                  >
+                    <GlowCard className="p-5 space-y-4" glowColor="cyan">
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                        <p className="text-[10px] uppercase tracking-wider text-blue-400 font-mono">Comparison Matrix</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/30">
+                          <p className="text-slate-500 text-[10px] uppercase tracking-wider font-mono mb-1">Your Swing</p>
+                          <p className="text-2xl font-bold text-white">{result.game_readiness}<span className="text-sm text-slate-500">/100</span></p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/30">
+                          <p className="text-slate-500 text-[10px] uppercase tracking-wider font-mono mb-1">
+                            {"name" in compareSwing ? compareSwing.name : "Previous"}
+                          </p>
+                          <p className="text-2xl font-bold text-white">{compareSwing.gameReadiness}<span className="text-sm text-slate-500">/100</span></p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/30">
+                          <p className="text-slate-500 text-[10px] uppercase tracking-wider font-mono mb-1">Your Gap</p>
+                          <p className="text-lg font-semibold text-cyan-300">{result.timing_gap_frames ?? "N/A"} <span className="text-xs text-slate-500">frames</span></p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/30">
+                          <p className="text-slate-500 text-[10px] uppercase tracking-wider font-mono mb-1">Ref Gap</p>
+                          <p className="text-lg font-semibold text-cyan-300">{compareSwing.timingGapFrames} <span className="text-xs text-slate-500">frames</span></p>
+                        </div>
+                      </div>
+                      <p className={`text-xs font-mono px-3 py-2 rounded-lg ${
+                        result.game_readiness > compareSwing.gameReadiness
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : result.game_readiness < compareSwing.gameReadiness
+                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          : "bg-slate-800/50 text-slate-400 border border-slate-700/30"
+                      }`}>
+                        {result.game_readiness > compareSwing.gameReadiness
+                          ? "Performance exceeds reference benchmark."
+                          : result.game_readiness < compareSwing.gameReadiness
+                          ? "Focus on coach feedback to close the gap."
+                          : "Consistent with reference benchmark."}
                       </p>
-                      <p className="text-slate-100">{compareSwing.gameReadiness}/100</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400 text-xs mb-1">Gap</p>
-                      <p className="text-slate-100">{result.timing_gap_frames} frames</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400 text-xs mb-1">Gap</p>
-                      <p className="text-slate-100">{compareSwing.timingGapFrames} frames</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {result.game_readiness > compareSwing.gameReadiness
-                      ? "Your current swing shows improvement!"
-                      : result.game_readiness < compareSwing.gameReadiness
-                      ? "Focus on the coach feedback to close the gap."
-                      : "Consistent performance."}
-                  </p>
-                </Card>
-              )}
+                    </GlowCard>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {result.ai_explanation && (
-                <Card className="border border-slate-800 bg-slate-950 p-5">
-                  <p className="text-[13px] text-slate-400 mb-2">Coach Breakdown</p>
-                  <pre className="whitespace-pre-wrap text-sm text-slate-100 bg-slate-950 border-l-4 border-sky-400 pl-4 py-3 leading-relaxed">
-                    {result.ai_explanation}
-                  </pre>
-                </Card>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <GlowCard className="p-6" glowColor="emerald">
+                    <HudCorners />
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                      <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-mono">Coach Intelligence</p>
+                    </div>
+                    <div className="whitespace-pre-wrap text-sm text-slate-200 leading-relaxed border-l-2 border-emerald-500/30 pl-4 font-sans">
+                      {result.ai_explanation}
+                    </div>
+                  </GlowCard>
+                </motion.div>
               )}
 
-              <Card className="border border-slate-800 bg-slate-950 p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[13px] text-slate-400">Training Plan</p>
-                  <Button
-                    onClick={generateTrainingPlan}
-                    disabled={loadingPlan || !isAuthenticated}
-                    size="sm"
-                    className="bg-sky-400 text-slate-950 hover:bg-sky-300"
-                    data-testid="button-training-plan"
-                  >
-                    {loadingPlan ? "Generating..." : "Generate Plan"}
-                  </Button>
-                </div>
-                {!isAuthenticated && (
-                  <p className="text-xs text-slate-500">Login to generate personalized training plans.</p>
-                )}
-                {trainingPlan && (
-                  <pre className="whitespace-pre-wrap text-sm text-slate-100 leading-relaxed">
-                    {trainingPlan}
-                  </pre>
-                )}
-              </Card>
-
-              <p className="text-xs text-slate-500 text-center">
-                Powered by Late-Decision Swing Analysis™
-              </p>
-
-              <Button
-                onClick={() => { setResult(null); setFile(null); setCompareSwing(null); }}
-                className="w-full rounded-lg bg-sky-400 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-300"
-                data-testid="button-analyze-another"
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
               >
-                Analyze Another Swing
-              </Button>
+                <GlowCard className="p-6 space-y-4" glowColor="amber">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                      <p className="text-[10px] uppercase tracking-wider text-amber-400 font-mono">Training Protocol</p>
+                    </div>
+                    <Button
+                      onClick={generateTrainingPlan}
+                      disabled={loadingPlan || !isAuthenticated}
+                      size="sm"
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+                      data-testid="button-training-plan"
+                    >
+                      {loadingPlan ? "Generating..." : "Generate Plan"}
+                    </Button>
+                  </div>
+                  {!isAuthenticated && (
+                    <p className="text-xs text-slate-500 font-mono">Login to generate personalized training plans.</p>
+                  )}
+                  {trainingPlan && (
+                    <div className="whitespace-pre-wrap text-sm text-slate-200 leading-relaxed border-l-2 border-amber-500/30 pl-4">
+                      {trainingPlan}
+                    </div>
+                  )}
+                </GlowCard>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-center space-y-3"
+              >
+                <p className="text-[10px] text-slate-600 font-mono uppercase tracking-wider">
+                  Powered by Late-Decision Swing Analysis
+                </p>
+                <Button
+                  onClick={() => { setResult(null); setFile(null); setCompareSwing(null); }}
+                  className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-500 py-3 text-sm font-semibold text-white hover:from-cyan-400 hover:to-emerald-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all"
+                  data-testid="button-analyze-another"
+                >
+                  Analyze Another Swing
+                </Button>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -633,171 +718,245 @@ export default function SwingAnalyzerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-md px-6 py-8">
-        <header className="mb-6 text-center">
+    <div className="min-h-screen bg-[#030712] text-slate-100 relative overflow-hidden">
+      <FuturisticBackground />
+      <div className="relative z-10 mx-auto max-w-md px-6 py-8">
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 text-center"
+        >
           <div className="flex justify-center mb-4">
             {isAuthenticated ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+                <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-80 bg-slate-900/50 backdrop-blur-sm border border-slate-700/30 rounded-full px-3 py-1.5 transition-all hover:border-cyan-500/30">
                   {user?.profileImageUrl && (
-                    <img src={user.profileImageUrl} alt="" className="w-8 h-8 rounded-full" />
+                    <img src={user.profileImageUrl} alt="" className="w-6 h-6 rounded-full ring-1 ring-cyan-500/30" />
                   )}
                   <span className="text-sm text-slate-300">{user?.firstName || user?.email}</span>
-                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-slate-900 border-slate-700">
+                <DropdownMenuContent align="center" className="bg-slate-900/95 backdrop-blur-xl border-slate-700/50">
                   <DropdownMenuItem asChild>
                     <a href="/api/logout" className="cursor-pointer text-slate-200">
                       Sign Out
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DropdownMenuSeparator className="bg-slate-700/50" />
                   <DeleteAccountDialog />
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <a
                 href="/api/login"
-                className="text-sm text-sky-400 hover:text-sky-300"
+                className="text-sm text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-4 py-1.5 transition-all hover:bg-cyan-500/20 font-mono"
                 data-testid="link-login"
               >
-                Login to save your swings
+                Login to save swings
               </a>
             )}
           </div>
-          <h1 className="text-2xl font-semibold text-sky-400" data-testid="text-title">
-            Baseball Swing Analysis
+          
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <PulsingDot color="cyan" />
+            <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-400 font-mono">System Ready</span>
+          </div>
+          
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent" data-testid="text-title">
+            Swing Analysis
           </h1>
-          <p className="mt-1 text-sm text-slate-300">
-            Late-Decision Swing Analysis™
+          <p className="mt-2 text-sm text-slate-400 font-mono">
+            Late-Decision Swing Analysis
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-[11px] text-slate-600">
             Game-relevant swing feedback from video
           </p>
-        </header>
+        </motion.header>
 
-        <Card className="border border-slate-800 bg-slate-950 p-5">
-          <h2 className="text-lg font-semibold text-slate-100 mb-2" data-testid="text-form-title">
-            Upload a Swing Video
-          </h2>
-          <p className="text-sm text-slate-400 mb-5">
-            Upload a short video from the side view. The system analyzes swing sequence and balance patterns.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-5" data-testid="form-upload">
-            <div>
-              <label className="block text-[13px] text-slate-300 mb-2">
-                Pitch Context
-              </label>
-              <Select value={pitchType} onValueChange={setPitchType}>
-                <SelectTrigger 
-                  className="w-full border-slate-800 bg-slate-950 text-slate-100"
-                  data-testid="select-pitch-type"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-slate-800 bg-slate-900">
-                  <SelectItem value="unknown">Unknown / Mixed</SelectItem>
-                  <SelectItem value="fastball">Fastball</SelectItem>
-                  <SelectItem value="breaking">Breaking Ball</SelectItem>
-                </SelectContent>
-              </Select>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <GlowCard className="p-6" glowColor="cyan">
+            <ScanLine />
+            <HudCorners />
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+              <h2 className="text-[10px] uppercase tracking-wider text-cyan-400 font-mono">Upload Module</h2>
             </div>
+            <p className="text-sm text-slate-400 mb-6">
+              Upload a short video from the side view. The system analyzes swing sequence and balance patterns.
+            </p>
 
-            <div>
-              <label className="block text-[13px] text-slate-300 mb-2">
-                Swing Video
-              </label>
-              <Input
-                type="file"
-                accept="video/*"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                required
-                className="w-full border-slate-800 bg-slate-950 text-slate-100 file:mr-4 file:rounded-md file:border-0 file:bg-sky-400 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-950 hover:file:bg-sky-300"
-                data-testid="input-video"
-              />
-            </div>
-
-            {videoPreview && (
-              <div data-testid="video-preview">
-                <p className="text-[13px] text-slate-400 mb-2">Preview (use controls for slow-motion)</p>
-                <VideoPlayer src={videoPreview} className="max-h-64" />
+            <form onSubmit={handleSubmit} className="space-y-5" data-testid="form-upload">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-mono mb-2">
+                  Pitch Context
+                </label>
+                <Select value={pitchType} onValueChange={setPitchType}>
+                  <SelectTrigger 
+                    className="w-full border-slate-700/50 bg-slate-900/80 text-slate-100 backdrop-blur-sm focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                    data-testid="select-pitch-type"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-slate-700/50 bg-slate-900/95 backdrop-blur-xl">
+                    <SelectItem value="unknown">Unknown / Mixed</SelectItem>
+                    <SelectItem value="fastball">Fastball</SelectItem>
+                    <SelectItem value="breaking">Breaking Ball</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
 
-            <Button
-              type="submit"
-              disabled={!file || isUploading}
-              className="w-full rounded-lg bg-sky-400 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-60"
-              data-testid="button-analyze"
-            >
-              {isUploading ? (uploadProgress || "Analyzing...") : "Analyze Swing"}
-            </Button>
-
-            {isUploading && (
-              <div className="flex items-center justify-center gap-2 text-sm text-slate-400" data-testid="status-uploading">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="h-4 w-4 rounded-full border-2 border-sky-400 border-t-transparent"
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-mono mb-2">
+                  Video Input
+                </label>
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  required
+                  className="w-full border-slate-700/50 bg-slate-900/80 text-slate-100 backdrop-blur-sm file:mr-4 file:rounded-md file:border-0 file:bg-gradient-to-r file:from-cyan-500 file:to-emerald-500 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:from-cyan-400 hover:file:to-emerald-400 focus:border-cyan-500/50"
+                  data-testid="input-video"
                 />
-                {uploadProgress || "Processing video frames..."}
               </div>
-            )}
 
-            {error && (
-              <p className="text-sm text-rose-400 text-center" data-testid="status-error">
-                {error}
-              </p>
-            )}
-          </form>
-
-          <p className="mt-5 text-xs text-slate-500 text-center">
-            Instructional feedback only. Designed to support training, not replace coaching.
-          </p>
-        </Card>
-
-        {isAuthenticated && swingHistory.length > 0 && (
-          <Card className="mt-6 border border-slate-800 bg-slate-950 p-5">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-semibold text-slate-100">Recent Swings</h3>
-              <a 
-                href="/progress" 
-                className="text-xs text-sky-400 hover:text-sky-300"
-                data-testid="link-progress-dashboard"
-              >
-                View Progress →
-              </a>
-            </div>
-            <div className="space-y-2">
-              {swingHistory.slice(0, 3).map((swing) => (
-                <div key={swing.id} className="flex justify-between items-center p-2 rounded bg-slate-900">
-                  <div>
-                    <p className="text-sm text-slate-100">{formatClassification(swing.classification)}</p>
-                    <p className="text-xs text-slate-400">{new Date(swing.createdAt).toLocaleDateString()}</p>
+              {videoPreview && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  data-testid="video-preview"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                    <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-mono">Preview</p>
                   </div>
-                  <p className="text-sm font-semibold text-sky-400">{swing.gameReadiness}/100</p>
+                  <VideoPlayer src={videoPreview} className="max-h-64" />
+                </motion.div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={!file || isUploading}
+                className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-500 py-3 text-sm font-semibold text-white hover:from-cyan-400 hover:to-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all"
+                data-testid="button-analyze"
+              >
+                {isUploading ? (uploadProgress || "Analyzing...") : "Analyze Swing"}
+              </Button>
+
+              <AnimatePresence>
+                {isUploading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center gap-3 py-2"
+                    data-testid="status-uploading"
+                  >
+                    <div className="w-full bg-slate-800/50 rounded-full h-1.5 overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full"
+                        animate={{ width: uploadProgress.includes("%") ? uploadProgress.match(/\d+/)?.[0] + "%" : "100%" }}
+                        transition={{ duration: 0.3 }}
+                        style={{
+                          boxShadow: "0 0 10px rgba(6,182,212,0.5)",
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="h-3 w-3 rounded-full border border-cyan-400 border-t-transparent"
+                      />
+                      {uploadProgress || "Processing video frames..."}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-sm text-rose-400 text-center bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 font-mono"
+                    data-testid="status-error"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+
+            <p className="mt-5 text-[10px] text-slate-600 text-center font-mono">
+              Instructional feedback only. Designed to support training.
+            </p>
+          </GlowCard>
+        </motion.div>
+
+        <AnimatePresence>
+          {isAuthenticated && swingHistory.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <GlowCard className="mt-6 p-5" glowColor="emerald">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                    <h3 className="text-[10px] uppercase tracking-wider text-emerald-400 font-mono">Recent Analyses</h3>
+                  </div>
+                  <a 
+                    href="/progress" 
+                    className="text-xs text-cyan-400 hover:text-cyan-300 font-mono transition-colors"
+                    data-testid="link-progress-dashboard"
+                  >
+                    Dashboard →
+                  </a>
                 </div>
-              ))}
-            </div>
-          </Card>
-        )}
+                <div className="space-y-2">
+                  {swingHistory.slice(0, 3).map((swing) => (
+                    <div key={swing.id} className="flex justify-between items-center p-3 rounded-lg bg-slate-900/50 border border-slate-800/30 hover:border-slate-700/50 transition-all">
+                      <div>
+                        <p className="text-sm text-slate-100 font-medium">{formatClassification(swing.classification)}</p>
+                        <p className="text-[11px] text-slate-500 font-mono">{new Date(swing.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className={`text-lg font-bold font-mono ${
+                        swing.gameReadiness >= 70 ? "text-emerald-400" :
+                        swing.gameReadiness >= 50 ? "text-amber-400" : "text-rose-400"
+                      }`} style={{
+                        textShadow: swing.gameReadiness >= 70 ? "0 0 8px rgba(16,185,129,0.4)" :
+                          swing.gameReadiness >= 50 ? "0 0 8px rgba(245,158,11,0.4)" : "0 0 8px rgba(244,63,94,0.4)"
+                      }}>
+                        {swing.gameReadiness}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </GlowCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <footer className="mt-8 pb-6 text-center">
-          <div className="flex justify-center gap-4 text-xs text-slate-500">
-            <a href="/terms" className="hover:text-slate-300" data-testid="link-terms">
-              Terms of Service
+          <div className="flex justify-center gap-4 text-[11px] text-slate-600 font-mono">
+            <a href="/terms" className="hover:text-slate-400 transition-colors" data-testid="link-terms">
+              Terms
             </a>
-            <span>•</span>
-            <a href="/privacy" className="hover:text-slate-300" data-testid="link-privacy">
-              Privacy Policy
+            <span className="text-slate-800">|</span>
+            <a href="/privacy" className="hover:text-slate-400 transition-colors" data-testid="link-privacy">
+              Privacy
             </a>
           </div>
-          <p className="mt-2 text-xs text-slate-600">
-            © {new Date().getFullYear()} Torque Bat Trainer. All rights reserved.
+          <p className="mt-2 text-[10px] text-slate-700 font-mono">
+            {new Date().getFullYear()} Torque Bat Trainer
           </p>
         </footer>
       </div>
