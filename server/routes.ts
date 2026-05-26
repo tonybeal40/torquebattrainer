@@ -7,7 +7,7 @@ import fs from "fs";
 import { spawn } from "child_process";
 import OpenAI from "openai";
 import { z } from "zod";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./auth";
 
 interface PoseAnalysisResult {
   frames_processed: number;
@@ -103,8 +103,8 @@ const uploadBodySchema = z.object({
 });
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 async function generateAIExplanation(
@@ -131,7 +131,7 @@ Output exactly this format:
 Keep it short. No jargon. Coach tone.`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "llama-3.1-8b-instant",
     messages: [
       { role: "system", content: "You are an elite baseball hitting coach." },
       { role: "user", content: prompt }
@@ -166,7 +166,7 @@ Create a focused 1-week training plan with:
 Keep it actionable and realistic for a youth/amateur player.`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "llama-3.1-8b-instant",
     messages: [
       { role: "system", content: "You are an elite baseball hitting coach." },
       { role: "user", content: prompt }

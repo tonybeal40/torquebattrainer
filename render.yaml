@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: torquebattrainer
+    runtime: node
+    plan: free
+    buildCommand: |
+      pip install mediapipe opencv-python-headless numpy
+      npm install
+      npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: torquebattrainer-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+
+databases:
+  - name: torquebattrainer-db
+    plan: free
